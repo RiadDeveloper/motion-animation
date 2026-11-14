@@ -1,0 +1,23 @@
+{
+  "name": "riad-developer-intro",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "assets": "node scripts/assets.mjs",
+    "studio": "npm run assets && remotion studio",
+    "render": "npm run assets && remotion render RiadIntro out/riad-intro.mp4",
+    "still": "npm run assets && remotion still RiadIntro"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/google-fonts": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0",
+    "simple-icons": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.5.0"
+  }
+}
