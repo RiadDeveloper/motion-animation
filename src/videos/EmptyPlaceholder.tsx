@@ -19,7 +19,7 @@ export const EmptyPlaceholder: React.FC = () => {
 				}}
 			>
 				<Kinetic
-					text="MOTION STUDIO READY"
+					text="CINEFLOW STUDIO READY"
 					delay={10}
 					stagger={2}
 					style={{
@@ -38,7 +38,7 @@ export const EmptyPlaceholder: React.FC = () => {
 							letterSpacing: 1,
 						}}
 					>
-						Tell Antigravity which video you would like to create.
+						Prompt CineFlow or an AI agent to generate or edit a video.
 					</div>
 				</Rise>
 			</AbsoluteFill>

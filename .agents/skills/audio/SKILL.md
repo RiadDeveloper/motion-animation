@@ -1,109 +1,87 @@
 ---
 name: cineflow-audio
 description: >-
-  Audio integration, sound design, volume interpolation, and beat-matching for CineFlow videos.
-  Use whenever adding background music, sound effects (whoosh, pop, click, riser), audio ducking,
-  fading in/out, or synchronizing visual scene transitions with audio tracks.
+  Dynamic sound design, semantic audio mapping, on-demand SFX generation, and beat synchronization for CineFlow videos.
+  Use whenever matching sound effects to animations (whoosh, pop, click, impact, chime, shutter, coin),
+  generating on-demand audio via scripts/generate-sfx.mjs, volume ducking, or beat-matching visual cuts.
 ---
 
-# CineFlow Audio Sync & Sound Design Skill
+# CineFlow Dynamic Sound Design & SFX Synthesis Engine
 
-This skill guides adding audio tracks, sound effects, automated volume curves, and audio-visual synchronization in Remotion.
+Never produce silent videos. CineFlow enables AI models to deeply analyze user prompts and visual animations, selecting or synthesizing the exact right acoustic sound effects (SFX) and background soundtracks tailored to the mood, pace, and meaning of every scene.
 
 ---
 
-## 1. Core Audio Component in Remotion
+## 1. Semantic Prompt-to-Sound Mapping Heuristic
 
-Remotion provides the `<Audio />` component for seamless audio playback and rendering:
+When creating any video, analyze the **intent and visual action** of each element to assign its acoustic counterpart:
 
-```tsx
-import {Audio, staticFile, interpolate} from 'remotion';
+| Visual Element / Animation | Acoustic SFX | Intent / Feeling |
+| :--- | :--- | :--- |
+| **Profile Photo / Avatar Reveal** | `sfx/shutter.wav` + `sfx/whoosh-fast.wav` | Crisp camera snapshot capturing human presence |
+| **Major Title / Big Headline Slam** | `sfx/impact-heavy.wav` | Heavy cinematic 808 sub-bass anchoring high importance |
+| **Pill Badges, Icons & Spring Entrances** | `sfx/pop-clean.wav` / `sfx/pop-warm.wav` | Tactile, responsive spring physics feedback |
+| **Terminal Typing / CLI Code / Bullet Lines** | `sfx/typewriter.wav` / `sfx/click-digital.wav` | Technical precision, mechanical keyboard feel |
+| **Financials, Money, Counters & Top-Ups** | `sfx/coin-ding.wav` + `sfx/bass-drop.wav` | Resonant metallic ring and deep wealth/scale impact |
+| **Awards, Certifications & Achievements** | `sfx/chime-sparkle.wav` | Shimmering harmonic bell chord celebrating success |
+| **Tech Orbiting / Sci-Fi Energy Streaks** | `sfx/laser-swoosh.wav` | High-velocity cybernetic motion |
+| **Pre-Drop Builds & Scene Entrances** | `sfx/riser-tension.wav` | Exponential tension swell leading into high-impact reveals |
+| **Punchy Transition Jump Cuts** | `sfx/impact-punch.wav` | Rapid, punchy mid-frequency transition cut |
 
-// Place audio files in the public/ folder or reference via URL
-<Audio
-  src={staticFile('music.mp3')}
-  volume={(f) =>
-    interpolate(f, [0, 30, TOTAL_FRAMES - 60, TOTAL_FRAMES], [0, 0.8, 0.8, 0], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    })
-  }
-/>
+---
+
+## 2. Pre-Built Studio Sound Library (`public/sfx/`)
+
+All foundational sound effects are synthesized in 44.1kHz 16-bit PCM WAV format inside `public/sfx/`:
+
+- **Transitions:** `whoosh-fast.wav`, `whoosh-cinematic.wav`, `laser-swoosh.wav`
+- **Impacts & Drops:** `impact-heavy.wav`, `impact-punch.wav`, `bass-drop.wav`
+- **Pops & Clicks:** `pop-clean.wav`, `pop-warm.wav`, `click-digital.wav`, `typewriter.wav`
+- **Accents & Milestones:** `coin-ding.wav`, `shutter.wav`, `chime-sparkle.wav`, `riser-tension.wav`
+- **Soundtracks:**
+  - `sfx/beat-electronic.wav` (or `beat.wav`): 60s 120 BPM upbeat electronic tech beat with 808 kick, snare, hi-hats, bassline, and synth arpeggio.
+  - `sfx/beat-lofi.wav`: 60s 85 BPM relaxed lo-fi chillhop beat with dusty Rhodes chords and soft vinyl crackle.
+
+---
+
+## 3. On-Demand Custom SFX Generation
+
+If a prompt requires a custom or new sound effect not covered by existing files, synthesize it on the fly:
+
+```bash
+node scripts/generate-sfx.mjs custom <filename.wav> <type>
+```
+
+*Example:*
+```bash
+node scripts/generate-sfx.mjs custom notification-chime.wav chime
+node scripts/generate-sfx.mjs custom cyber-laser.wav laser-swoosh
 ```
 
 ---
 
-## 2. Professional Volume Automation Curves
+## 4. Multi-Track Synchronization in Remotion
 
-### 1. Fade-in and Fade-out Curve
-Smoothly rises from 0 to full volume over the first $N$ frames, holds, then fades out before the video ends:
-
-```tsx
-export const audioVolumeCurve = (
-  frame: number,
-  totalFrames: number,
-  fadeInFrames = 30,
-  fadeOutFrames = 60,
-  maxVolume = 0.8
-) => {
-  return interpolate(
-    frame,
-    [0, fadeInFrames, totalFrames - fadeOutFrames, totalFrames],
-    [0, maxVolume, maxVolume, 0],
-    {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}
-  );
-};
-```
-
-### 2. Audio Ducking (During Voiceover or Key Messages)
-Lowering background music volume when key audio or important messaging is highlighted:
-
-```tsx
-<Audio
-  src={staticFile('background-music.mp3')}
-  volume={(f) => {
-    // Duck volume during scene 2 (frames 150 to 300)
-    return interpolate(
-      f,
-      [0, 30, 140, 160, 290, 310, total - 45, total],
-      [0, 0.8, 0.8, 0.25, 0.25, 0.8, 0.8, 0],
-      {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}
-    );
-  }}
-/>
-```
-
----
-
-## 3. Multi-Track Sound Effects (SFX)
-
-Add punchy micro-sounds (whooshes, pops, impacts) triggered precisely on scene transitions or element arrivals:
+Trigger sound effects at the exact frame where visual elements appear:
 
 ```tsx
 import {Audio, Sequence, staticFile} from 'remotion';
 
-// Trigger whoosh on scene transition at frame 90
-<Sequence from={90}>
-  <Audio src={staticFile('sfx/whoosh.mp3')} volume={0.6} />
+// Play background soundtrack throughout video
+<Audio src={staticFile('sfx/beat.wav')} volume={0.35} />
+
+// Trigger camera snapshot when avatar pops in at frame 14
+<Sequence from={14}>
+  <Audio src={staticFile('sfx/shutter.wav')} volume={0.8} />
 </Sequence>
 
-// Trigger pop sound when badge appears at frame 140
-<Sequence from={140}>
-  <Audio src={staticFile('sfx/pop.mp3')} volume={0.7} />
+// Trigger heavy 808 boom when main headline slams at frame 32
+<Sequence from={32}>
+  <Audio src={staticFile('sfx/impact-heavy.wav')} volume={0.85} />
+</Sequence>
+
+// Trigger coin ring on financial counter at frame 120
+<Sequence from={120}>
+  <Audio src={staticFile('sfx/coin-ding.wav')} volume={0.8} />
 </Sequence>
 ```
-
----
-
-## 4. BPM & Beat Synchronization Math
-
-To sync scene cuts or visual pulses to music BPM:
-
-$$\text{FramesPerBeat} = \frac{60}{\text{BPM}} \times \text{FPS}$$
-
-For a 120 BPM track at 30 FPS:
-$$\text{FramesPerBeat} = \frac{60}{120} \times 30 = 15 \text{ frames}$$
-
-- **Every 1 beat (15 frames):** Micro pulse, particle flash, or shockwave ring.
-- **Every 4 beats (60 frames / 2 seconds):** Secondary element arrival.
-- **Every 8 or 16 beats (120 or 240 frames):** Major scene cut / camera shift.

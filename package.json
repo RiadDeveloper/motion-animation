@@ -4,12 +4,14 @@
   "description": "Autonomous AI Video Studio & Programmatic Video Editor powered by Remotion",
   "private": false,
   "scripts": {
-    "assets": "node scripts/assets.mjs",
+    "sync": "node scripts/sync-videos.mjs",
+    "studio": "node scripts/sync-videos.mjs && remotion studio",
+    "render": "node scripts/sync-videos.mjs && remotion render",
+    "still": "node scripts/sync-videos.mjs && remotion still",
+    "compositions": "node scripts/sync-videos.mjs && remotion compositions",
     "inspect": "node scripts/inspect-video.mjs",
-    "studio": "npm run assets && remotion studio",
-    "render": "remotion render",
-    "still": "remotion still",
-    "compositions": "remotion compositions"
+    "generate-sfx": "node scripts/generate-sfx.mjs",
+    "typecheck": "node scripts/sync-videos.mjs && tsc --noEmit"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",

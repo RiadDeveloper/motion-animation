@@ -54,7 +54,7 @@ Import directly from `../../editor` and `../../ui`:
 ```tsx
 import React from 'react';
 import {AbsoluteFill, Sequence} from 'remotion';
-import {Background, C, FONT} from '../../ui';
+import {Background, C, FONT, gradientText} from '../../ui';
 import {TerminalTypist, Card3D, KeywordCallout} from '../../editor';
 
 export const EXPLAINER_CONFIG = {

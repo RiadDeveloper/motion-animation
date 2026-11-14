@@ -9,10 +9,9 @@ import {
 	useCurrentFrame,
 	useVideoConfig,
 } from 'remotion';
-import {loadFont} from '@remotion/google-fonts/Inter';
-import assets from './assets.json';
+import { loadFont } from '@remotion/google-fonts/Inter';
 
-export const {fontFamily: FONT} = loadFont('normal', {
+export const { fontFamily: FONT } = loadFont('normal', {
 	weights: ['400', '500', '700', '800', '900'],
 	subsets: ['latin'],
 });
@@ -31,14 +30,14 @@ export const C = {
 /** Transition length in frames between scenes. */
 export const T = 18;
 
-export const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
+export const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
-export const SMOOTH = {damping: 200};
-export const POP = {damping: 14, mass: 0.7, stiffness: 120};
+export const SMOOTH = { damping: 200 };
+export const POP = { damping: 14, mass: 0.7, stiffness: 120 };
 
 /** Spring that starts at `delay`. */
 export const spr = (frame: number, fps: number, delay = 0, config: object = SMOOTH) =>
-	spring({frame: frame - delay, fps, config});
+	spring({ frame: frame - delay, fps, config });
 
 export const gradientText = (from = C.lime, to = C.violetSoft): React.CSSProperties => ({
 	backgroundImage: `linear-gradient(100deg, ${from}, ${to})`,
@@ -52,9 +51,9 @@ export const Scene: React.FC<{
 	children: React.ReactNode;
 	fadeIn?: boolean;
 	fadeOut?: boolean;
-}> = ({children, fadeIn = true, fadeOut = true}) => {
+}> = ({ children, fadeIn = true, fadeOut = true }) => {
 	const f = useCurrentFrame();
-	const {durationInFrames: d} = useVideoConfig();
+	const { durationInFrames: d } = useVideoConfig();
 	const i = fadeIn ? interpolate(f, [T / 2, T + 4], [0, 1], clamp) : 1;
 	const o = fadeOut ? interpolate(f, [d - T, d - T / 2], [1, 0], clamp) : 1;
 	const scale = 1 - (1 - i) * 0.05 + (1 - o) * 0.07;
@@ -81,9 +80,9 @@ export const Rise: React.FC<{
 	dist?: number;
 	style?: React.CSSProperties;
 	children: React.ReactNode;
-}> = ({delay = 0, from = 'up', dist = 50, style, children}) => {
+}> = ({ delay = 0, from = 'up', dist = 50, style, children }) => {
 	const f = useCurrentFrame();
-	const {fps} = useVideoConfig();
+	const { fps } = useVideoConfig();
 	const p = spr(f, fps, delay);
 	const r = 1 - p;
 	const transform =
@@ -115,11 +114,11 @@ export const Kinetic: React.FC<{
 	stagger?: number;
 	style?: React.CSSProperties;
 	letterStyle?: (i: number) => React.CSSProperties;
-}> = ({text, delay = 0, stagger = 2, style, letterStyle}) => {
+}> = ({ text, delay = 0, stagger = 2, style, letterStyle }) => {
 	const f = useCurrentFrame();
-	const {fps} = useVideoConfig();
+	const { fps } = useVideoConfig();
 	return (
-		<div style={{display: 'flex', whiteSpace: 'pre', ...style}}>
+		<div style={{ display: 'flex', whiteSpace: 'pre', ...style }}>
 			{text.split('').map((ch, i) => {
 				const p = spr(f, fps, delay + i * stagger, POP);
 				return (
@@ -143,11 +142,11 @@ export const Kinetic: React.FC<{
 /** Always-on backdrop: drifting glows, faint grid, floating particles, vignette. */
 export const Background: React.FC = () => {
 	const f = useCurrentFrame();
-	const {width, height} = useVideoConfig();
+	const { width, height } = useVideoConfig();
 	const gx = Math.sin(f / 140) * 160;
 	const gy = Math.cos(f / 170) * 90;
 	return (
-		<AbsoluteFill style={{backgroundColor: C.bg, overflow: 'hidden'}}>
+		<AbsoluteFill style={{ backgroundColor: C.bg, overflow: 'hidden' }}>
 			<AbsoluteFill
 				style={{
 					background: `radial-gradient(700px 700px at ${420 + gx}px ${260 + gy}px, rgba(124,58,237,0.26), transparent 70%),
@@ -191,16 +190,28 @@ export const Background: React.FC = () => {
 				);
 			})}
 			<AbsoluteFill
-				style={{background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.6) 100%)'}}
+				style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.6) 100%)' }}
 			/>
 		</AbsoluteFill>
 	);
 };
 
-/** Photo in a glowing ring with orbiting particles. Falls back to initials if no photo file exists. */
-export const Photo: React.FC<{size: number; delay?: number}> = ({size, delay = 0}) => {
+export interface PhotoProps {
+	size: number;
+	delay?: number;
+	src?: string;
+	initials?: string;
+}
+
+/** Photo in a glowing ring with orbiting particles. Displays image if `src` is provided, otherwise falls back to initials. */
+export const Photo: React.FC<PhotoProps> = ({
+	size,
+	delay = 0,
+	src,
+	initials = 'CF',
+}) => {
 	const f = useCurrentFrame();
-	const {fps} = useVideoConfig();
+	const { fps } = useVideoConfig();
 	const p = spr(f, fps, delay, POP);
 	const pulse = 0.5 + 0.5 * Math.sin(f / 14);
 	const ring = 8;
@@ -293,13 +304,13 @@ export const Photo: React.FC<{size: number; delay?: number}> = ({size, delay = 0
 					justifyContent: 'center',
 				}}
 			>
-				{assets.photo ? (
+				{src ? (
 					<Img
-						src={staticFile(assets.photo)}
-						style={{width: '100%', height: '100%', objectFit: 'cover'}}
+						src={src.startsWith('http') || src.startsWith('/') ? src : staticFile(src)}
+						style={{ width: '100%', height: '100%', objectFit: 'cover' }}
 					/>
 				) : (
-					<div style={{fontSize: size * 0.34, fontWeight: 900, ...gradientText()}}>RD</div>
+					<div style={{ fontSize: size * 0.34, fontWeight: 900, ...gradientText() }}>{initials}</div>
 				)}
 			</div>
 		</div>
@@ -307,7 +318,7 @@ export const Photo: React.FC<{size: number; delay?: number}> = ({size, delay = 0
 };
 
 /** Brand logo from a simple-icons entry. */
-export const Brand: React.FC<{icon: {path: string; hex: string}; size: number; color?: string}> = ({
+export const Brand: React.FC<{ icon: { path: string; hex: string }; size: number; color?: string }> = ({
 	icon,
 	size,
 	color,
@@ -318,7 +329,7 @@ export const Brand: React.FC<{icon: {path: string; hex: string}; size: number; c
 );
 
 /** Simple line icon. */
-export const Line: React.FC<{size: number; color?: string; children: React.ReactNode}> = ({
+export const Line: React.FC<{ size: number; color?: string; children: React.ReactNode }> = ({
 	size,
 	color = C.lime,
 	children,
@@ -367,7 +378,7 @@ export const icons = {
 };
 
 /** Rounded icon tile. */
-export const Tile: React.FC<{size: number; glow?: string; children: React.ReactNode}> = ({
+export const Tile: React.FC<{ size: number; glow?: string; children: React.ReactNode }> = ({
 	size,
 	glow = 'rgba(163,230,53,0.25)',
 	children,

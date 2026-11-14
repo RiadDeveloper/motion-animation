@@ -20,7 +20,7 @@ Read the user prompt and automatically pull the specialized skill from `.agents/
 
 | User Request | Auto-Selected Skill | Reference Path |
 | :--- | :--- | :--- |
-| **Music & Lyric Videos**<br>Spotify 3D tilted cards, rap & drill word walls, bass kick camera shakes, minimal glowing lyrics | `cineflow-lyrics`<br>`cineflow-audio` | `.agents/skills/lyrics/SKILL.md`<br>`.agents/skills/audio/SKILL.md` |
+| **Music & Lyric Videos**<br>Spotify 3D tilted cards, rap & drill word walls, bass kick camera shakes, lo-fi vinyl, synthwave neon | `cineflow-lyrics`<br>`cineflow-audio` | `.agents/skills/lyrics/SKILL.md`<br>`.agents/skills/audio/SKILL.md` |
 | **Editing Existing Footage**<br>Cut, trim, jump cuts, punch zoom, lower-thirds, subtitles, PiP facecam, audio ducking | `cineflow-editor`<br>`cineflow-audio` | `.agents/skills/editor/SKILL.md`<br>`.agents/skills/audio/SKILL.md` |
 | **Explainers & Tech Tutorials**<br>Concepts, code typing in terminal, continuous 3D camera, architecture diagrams | `cineflow-explainers`<br>`cineflow-design` | `.agents/skills/explainers/SKILL.md`<br>`.agents/skills/design/SKILL.md` |
 | **Vertical Shorts & Reels**<br>9:16 mobile feeds, 2s hook, top progress bar, karaoke captions, landscape-to-vertical | `cineflow-shorts`<br>`cineflow-editor` | `.agents/skills/shorts/SKILL.md`<br>`.agents/skills/editor/SKILL.md` |
@@ -29,62 +29,33 @@ Read the user prompt and automatically pull the specialized skill from `.agents/
 
 ---
 
-## 2. Standard 4-Step Production Pipeline
+## 2. Standard Production Pipeline: Single-File Isolation
 
-Regardless of model strength, follow this deterministic 4-step pipeline to guarantee 100% bug-free output on the first try:
+Every video in CineFlow is completely self-contained in a single file under `src/videos/<video-name>.tsx`:
 
 ```mermaid
 flowchart LR
-    A["1. Inspect & Plan"] --> B["2. Code in src/videos/<project>/"]
-    B --> C["3. Register in src/videos/index.tsx"]
-    C --> D["4. Verify & Deliver"]
+    A["1. Inspect & Plan"] --> B["2. Write Single File src/videos/<project>.tsx"]
+    B --> C["3. Auto-Sync & Verify (npm run typecheck)"]
+    C --> D["4. Deliver Studio & Render Commands"]
 ```
 
-### Step 1: Inspect & Plan
-- If media is provided (video/audio/screenshot/song), inspect its duration, resolution, and FPS:
-  ```bash
-  node scripts/inspect-video.mjs "<path-to-media>"
-  ```
-- Set aspect ratio (16:9 Landscape $1920\times1080$, 9:16 Vertical $1080\times1920$, or custom) and duration in frames ($\text{durationInFrames} = \text{seconds} \times 30$).
+### Rule 1: Single-File Isolation
+- When creating a video, write all scenes, dynamic scene-adaptive backgrounds, sound effects, and config inside `src/videos/<video-name>.tsx`.
+- **DO NOT TOUCH `src/videos/index.tsx`:** CineFlow's auto-sync engine (`scripts/sync-videos.mjs`) automatically scans `src/videos/*.tsx` and maintains the registry.
+- **Instant Deletion:** If a user deletes `src/videos/<video-name>.tsx`, that video is immediately erased from the system without leaving any broken references.
 
-### Step 2: Write Isolated Video Module
-Create `src/videos/<project-name>/`:
-- `index.tsx`: Composition setup, timeline `<Sequence>`, and audio integration.
-- `scenes.tsx`: Scenes, kinetic animations, and editing overlays.
-- Import shared tools from `../../ui` (motion kit), `../../editor` (editing kit), and `../../lyrics` (lyric video kit).
+### Rule 2: Editing Existing Videos
+- If the user asks to modify an existing video (e.g. "change scene 2 timing", "update text at 20s"), locate and edit ONLY `src/videos/<video-name>.tsx`. Never touch other files.
 
-### Step 3: Register in Central Registry
-Add the new `<Composition>` to `<Folder name="Videos">` in `src/videos/index.tsx`:
-```tsx
-import {MyProject, MY_PROJECT_CONFIG} from './my-project';
+### Rule 3: Creating New Videos
+- If the user provides a prompt for a different, separate video, create a brand-new file `src/videos/<new-video-name>.tsx`.
 
-// Inside <Folder name="Videos">:
-<Composition
-  id={MY_PROJECT_CONFIG.id}
-  component={MyProject}
-  durationInFrames={MY_PROJECT_CONFIG.durationInFrames}
-  fps={MY_PROJECT_CONFIG.fps}
-  width={MY_PROJECT_CONFIG.width}
-  height={MY_PROJECT_CONFIG.height}
-/>
-```
+### Rule 4: Mandatory Sound Design & Scene-Adaptive Backgrounds
+- Every video MUST include:
+  1. An upbeat electronic soundtrack: `<Audio src={staticFile('sfx/beat.wav')} volume={0.35} />`.
+  2. Sound effects on element entrances: `sfx/whoosh.wav`, `sfx/pop.wav`, `sfx/impact.wav`, `sfx/click.wav`, `sfx/chime.wav`.
+  3. Unique, custom atmospheric background for each scene (never the exact same background repeated throughout).
 
-### Step 4: Verify & Deliver (Self-Correction Loop)
-- **MANDATORY CHECK:** Run `npx tsc --noEmit`. If there are any errors, fix them immediately before answering the user.
-- Provide user with the live studio preview command: `npm run studio`
-- Provide user with the production render command:
-  ```bash
-  npx remotion render src/index.ts <CompositionId> out/<project-name>.mp4
-  ```
-
----
-
-## 3. Fail-Safe Guardrails for AI Models
-
-To ensure smaller or weaker AI models never hallucinate or break code:
-
-1. **NEVER install new packages:** All necessary tools (`remotion`, `react`, `@remotion/media-utils`, `simple-icons`) are already installed.
-2. **NEVER invent raw unstyled divs:** Always use pre-built components (`<Background>`, `<Kinetic>`, `<Rise>`, `<Tile>`, `<SpotifyLyricCard>`, `<TerminalTypist>`, `<PunchZoom>`, `<LowerThird>`, `<CaptionOverlay>`).
-3. **NEVER guess media duration:** Always run `node scripts/inspect-video.mjs` to get exact frames.
-4. **ALWAYS keep assets in `public/`:** Files referenced with `staticFile('name.ext')` must exist inside `public/`.
-5. **ALWAYS check types:** Never complete a turn without running `npx tsc --noEmit`.
+### Rule 5: Verification
+- Always run `npm run typecheck` (`npm run sync && npx tsc --noEmit`) before responding to the user.

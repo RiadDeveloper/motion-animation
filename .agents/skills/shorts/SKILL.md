@@ -47,36 +47,11 @@ To maximize viewer engagement on short-form feeds:
    - Immediately display high-contrast, kinetic headline using `<Kinetic />` within frames 0–45.
    - Animate a shockwave ring or visual burst at frame 0.
 2. **Top/Bottom Animated Progress Bar:**
-   - Display a sleek glowing progress bar at the very top ($Y = 12$) or bottom to indicate video progress:
+   - Use the pre-built `<EditorProgressBar position="top" color={C.lime} />` from `../../editor`, or customize:
    ```tsx
-   export const ProgressBar: React.FC = () => {
-     const f = useCurrentFrame();
-     const {durationInFrames} = useVideoConfig();
-     const progress = (f / durationInFrames) * 100;
-     return (
-       <div
-         style={{
-           position: 'absolute',
-           top: 16,
-           left: 32,
-           right: 32,
-           height: 6,
-           borderRadius: 3,
-           backgroundColor: 'rgba(255,255,255,0.15)',
-           overflow: 'hidden',
-         }}
-       >
-         <div
-           style={{
-             width: `${progress}%`,
-             height: '100%',
-             background: 'linear-gradient(90deg, #A3E635, #7C3AED)',
-             boxShadow: '0 0 12px #A3E635',
-           }}
-         />
-       </div>
-     );
-   };
+   import {EditorProgressBar} from '../../editor';
+   // Inside composition:
+   <EditorProgressBar position="top" height={6} color={C.lime} />
    ```
 3. **Pacing & Cuts:**
    - Switch scenes or layout angles every 2.5 to 4 seconds (75 to 120 frames).

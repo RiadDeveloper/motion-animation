@@ -53,7 +53,7 @@ src/videos/
 From the user prompt, establish:
 1. **Aspect Ratio & Resolution:**
    - Standard Landscape (YouTube/Web): $1920 \times 1080$ (16:9)
-   - Vertical (Shorts/Reels/TikTok): $1080 \times 1920$ (9:16) — refer to `remotion-shorts-creator`
+   - Vertical (Shorts/Reels/TikTok): $1080 \times 1920$ (9:16) — refer to `cineflow-shorts` (`.agents/skills/shorts/SKILL.md`)
    - Square (Social Feed): $1080 \times 1080$ (1:1)
 2. **Duration & Frame Math:**
    - 30 FPS standard: $\text{durationInFrames} = \text{seconds} \times 30$

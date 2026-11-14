@@ -10,7 +10,7 @@ import {
 import {C, clamp, gradientText, POP, spr} from './ui';
 
 // =========================================================================
-// 1. SPOTIFY 3D TILTED LYRICS CARD (Aansh.ai style)
+// 1. SPOTIFY 3D TILTED LYRICS CARD
 // =========================================================================
 export interface LyricLine {
 	startFrame: number;
