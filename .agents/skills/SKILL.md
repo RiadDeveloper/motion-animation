@@ -31,13 +31,13 @@ Read the user prompt and automatically pull the specialized skill from `.agents/
 
 ## 2. Standard 4-Step Production Pipeline
 
-Regardless of the skill chosen, follow this unified execution pipeline:
+Regardless of model strength, follow this deterministic 4-step pipeline to guarantee 100% bug-free output on the first try:
 
 ```mermaid
 flowchart LR
     A["1. Inspect & Plan"] --> B["2. Code in src/videos/<project>/"]
     B --> C["3. Register in src/videos/index.tsx"]
-    C --> D["4. Verify & Render"]
+    C --> D["4. Verify & Deliver"]
 ```
 
 ### Step 1: Inspect & Plan
@@ -45,7 +45,7 @@ flowchart LR
   ```bash
   node scripts/inspect-video.mjs "<path-to-media>"
   ```
-- Determine aspect ratio (16:9 Landscape $1920\times1080$, 9:16 Vertical $1080\times1920$, or custom) and duration.
+- Set aspect ratio (16:9 Landscape $1920\times1080$, 9:16 Vertical $1080\times1920$, or custom) and duration in frames ($\text{durationInFrames} = \text{seconds} \times 30$).
 
 ### Step 2: Write Isolated Video Module
 Create `src/videos/<project-name>/`:
@@ -69,10 +69,22 @@ import {MyProject, MY_PROJECT_CONFIG} from './my-project';
 />
 ```
 
-### Step 4: Verify & Deliver
-- Run TypeScript check: `npx tsc --noEmit`
-- Give user the live preview command: `npm run studio`
-- Give user the production render command:
+### Step 4: Verify & Deliver (Self-Correction Loop)
+- **MANDATORY CHECK:** Run `npx tsc --noEmit`. If there are any errors, fix them immediately before answering the user.
+- Provide user with the live studio preview command: `npm run studio`
+- Provide user with the production render command:
   ```bash
   npx remotion render src/index.ts <CompositionId> out/<project-name>.mp4
   ```
+
+---
+
+## 3. Fail-Safe Guardrails for AI Models
+
+To ensure smaller or weaker AI models never hallucinate or break code:
+
+1. **NEVER install new packages:** All necessary tools (`remotion`, `react`, `@remotion/media-utils`, `simple-icons`) are already installed.
+2. **NEVER invent raw unstyled divs:** Always use pre-built components (`<Background>`, `<Kinetic>`, `<Rise>`, `<Tile>`, `<SpotifyLyricCard>`, `<TerminalTypist>`, `<PunchZoom>`, `<LowerThird>`, `<CaptionOverlay>`).
+3. **NEVER guess media duration:** Always run `node scripts/inspect-video.mjs` to get exact frames.
+4. **ALWAYS keep assets in `public/`:** Files referenced with `staticFile('name.ext')` must exist inside `public/`.
+5. **ALWAYS check types:** Never complete a turn without running `npx tsc --noEmit`.
