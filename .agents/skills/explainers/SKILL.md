@@ -1,14 +1,14 @@
 ---
 name: cineflow-explainers
 description: >-
-  Autonomous educational and explainer video engine for CineFlow (inspired by Explainroo and OneTake).
+  Autonomous educational and explainer video engine for CineFlow.
   Use whenever the user asks to explain a concept, teach a topic, create a tutorial, visualize a technical architecture,
   build an animated infographic, or convert documentation/articles into an engaging motion video.
 ---
 
 # CineFlow Explainer & Tutorial Creator
 
-Inspired by the top-ranked tools in the *Awesome Claude Video Skills* catalog (Explainroo, OneTake, Papercut), this skill equips the AI agent to turn complex ideas, technical concepts, and codebases into compelling, high-retention animated explainers.
+CineFlow provides a powerful technical storytelling engine to turn complex ideas, architecture diagrams, codebases, and tutorials into high-retention animated explainers.
 
 ---
 

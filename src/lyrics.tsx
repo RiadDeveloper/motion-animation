@@ -396,3 +396,288 @@ export const MusicPlayerHUD: React.FC<{
 		</div>
 	);
 };
+
+
+// =========================================================================
+// 5. LO-FI VINYL RECORD PLAYER (Aesthetic Chill / Acoustic / Indie)
+// =========================================================================
+export const VinylRecordPlayer: React.FC<{
+	trackTitle: string;
+	artistName: string;
+	coverImage?: string;
+	currentLyric?: string;
+	accentColor?: string;
+	size?: number;
+}> = ({
+	trackTitle,
+	artistName,
+	coverImage,
+	currentLyric,
+	accentColor = '#F59E0B',
+	size = 460,
+}) => {
+	const f = useCurrentFrame();
+	const rotation = f * 1.2;
+
+	return (
+		<div style={{display: 'flex', alignItems: 'center', gap: 64}}>
+			{/* Spinning Vinyl Record */}
+			<div
+				style={{
+					width: size,
+					height: size,
+					borderRadius: '50%',
+					background: 'radial-gradient(circle, #18181B 0%, #09090B 70%, #000 100%)',
+					border: '6px solid #27272A',
+					boxShadow: '0 25px 70px rgba(0,0,0,0.85), 0 0 40px rgba(245, 158, 11, 0.15)',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					position: 'relative',
+					transform: `rotate(${rotation}deg)`,
+				}}
+			>
+				{/* Concentric Vinyl Grooves */}
+				{[0.88, 0.76, 0.64, 0.52].map((k, i) => (
+					<div
+						key={i}
+						style={{
+							position: 'absolute',
+							width: size * k,
+							height: size * k,
+							borderRadius: '50%',
+							border: '1px solid rgba(255, 255, 255, 0.05)',
+						}}
+					/>
+				))}
+
+				{/* Center Label */}
+				<div
+					style={{
+						width: size * 0.36,
+						height: size * 0.36,
+						borderRadius: '50%',
+						background: `linear-gradient(135deg, ${accentColor}, #B45309)`,
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						boxShadow: '0 0 20px rgba(0,0,0,0.8)',
+						border: '4px solid #18181B',
+						overflow: 'hidden',
+					}}
+				>
+					{coverImage ? (
+						<Img
+							src={coverImage.startsWith('http') ? coverImage : staticFile(coverImage)}
+							style={{width: '100%', height: '100%', objectFit: 'cover'}}
+						/>
+					) : (
+						<div style={{fontSize: 28, fontWeight: 900, color: '#000'}}>♫</div>
+					)}
+				</div>
+
+				{/* Spindle hole */}
+				<div
+					style={{
+						position: 'absolute',
+						width: 14,
+						height: 14,
+						borderRadius: '50%',
+						backgroundColor: '#000',
+					}}
+				/>
+			</div>
+
+			{/* Song & Floating Lyric Text */}
+			<div style={{display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 650}}>
+				<div
+					style={{
+						padding: '8px 20px',
+						borderRadius: 999,
+						backgroundColor: 'rgba(245, 158, 11, 0.12)',
+						border: '1px solid rgba(245, 158, 11, 0.35)',
+						color: accentColor,
+						fontSize: 18,
+						fontWeight: 700,
+						width: 'fit-content',
+						letterSpacing: 2,
+						textTransform: 'uppercase',
+					}}
+				>
+					Vinyl Stream • 33 RPM
+				</div>
+
+				<div style={{fontSize: 54, fontWeight: 900, color: '#FFFFFF', letterSpacing: -1, lineHeight: 1.1}}>
+					{trackTitle}
+				</div>
+				<div style={{fontSize: 28, fontWeight: 500, color: C.dim}}>{artistName}</div>
+
+				{currentLyric && (
+					<div
+						style={{
+							marginTop: 18,
+							padding: '24px 32px',
+							borderRadius: 24,
+							background: 'rgba(255, 255, 255, 0.04)',
+							border: '1px solid rgba(255, 255, 255, 0.1)',
+							fontSize: 34,
+							fontWeight: 600,
+							color: '#F4F4F5',
+							fontStyle: 'italic',
+							lineHeight: 1.35,
+						}}
+					>
+						"{currentLyric}"
+					</div>
+				)}
+			</div>
+		</div>
+	);
+};
+
+// =========================================================================
+// 6. SYNTHWAVE / EDM NEON HORIZON GRID
+// =========================================================================
+export const NeonSynthHorizon: React.FC<{
+	trackTitle: string;
+	artistName: string;
+	activeLyric?: string;
+	primaryColor?: string;
+	secondaryColor?: string;
+}> = ({
+	trackTitle,
+	artistName,
+	activeLyric,
+	primaryColor = '#06B6D4', // Cyan
+	secondaryColor = '#EC4899', // Pink
+}) => {
+	const f = useCurrentFrame();
+	const gridScroll = (f * 4) % 60;
+
+	return (
+		<AbsoluteFill style={{backgroundColor: '#05050A', overflow: 'hidden'}}>
+			{/* Retro Sun / Glow Orb */}
+			<div
+				style={{
+					position: 'absolute',
+					top: 140,
+					left: '50%',
+					marginLeft: -220,
+					width: 440,
+					height: 440,
+					borderRadius: '50%',
+					background: `linear-gradient(180deg, ${secondaryColor} 0%, #8B5CF6 60%, transparent 100%)`,
+					boxShadow: `0 0 120px ${secondaryColor}88`,
+					opacity: 0.85,
+				}}
+			/>
+
+			{/* 3D Perspective Grid Horizon */}
+			<div
+				style={{
+					position: 'absolute',
+					bottom: 0,
+					left: -500,
+					right: -500,
+					height: 480,
+					perspective: 400,
+					overflow: 'hidden',
+				}}
+			>
+				<div
+					style={{
+						position: 'absolute',
+						inset: 0,
+						transform: 'rotateX(75deg)',
+						transformOrigin: '50% 100%',
+						backgroundImage: `
+							linear-gradient(0deg, transparent 24%, rgba(6, 182, 212, 0.4) 25%, rgba(6, 182, 212, 0.4) 26%, transparent 27%, transparent 74%, rgba(6, 182, 212, 0.4) 75%, rgba(6, 182, 212, 0.4) 76%, transparent 77%),
+							linear-gradient(90deg, transparent 24%, rgba(236, 72, 153, 0.4) 25%, rgba(236, 72, 153, 0.4) 26%, transparent 27%, transparent 74%, rgba(236, 72, 153, 0.4) 75%, rgba(236, 72, 153, 0.4) 76%, transparent 77%)
+						`,
+						backgroundSize: `60px 60px`,
+						backgroundPosition: `0px ${gridScroll}px`,
+					}}
+				/>
+			</div>
+
+			{/* Hero Synthwave Lyrics & Title */}
+			<AbsoluteFill
+				style={{
+					display: 'flex',
+					flexDirection: 'column',
+					alignItems: 'center',
+					justifyContent: 'center',
+					zIndex: 10,
+					padding: '0 80px',
+					textAlign: 'center',
+					gap: 18,
+				}}
+			>
+				<div style={{fontSize: 24, fontWeight: 800, color: primaryColor, letterSpacing: 4, textTransform: 'uppercase'}}>
+					{artistName}
+				</div>
+				<div
+					style={{
+						fontSize: 88,
+						fontWeight: 900,
+						letterSpacing: -2,
+						color: '#FFFFFF',
+						textShadow: `0 0 30px ${secondaryColor}, 0 0 60px ${primaryColor}`,
+					}}
+				>
+					{trackTitle}
+				</div>
+				{activeLyric && (
+					<div
+						style={{
+							marginTop: 32,
+							fontSize: 48,
+							fontWeight: 800,
+							letterSpacing: -0.5,
+							color: '#FFFFFF',
+							background: 'rgba(5, 5, 10, 0.75)',
+							padding: '16px 44px',
+							borderRadius: 24,
+							border: `1px solid ${primaryColor}66`,
+							boxShadow: `0 0 40px ${primaryColor}44`,
+						}}
+					>
+						{activeLyric}
+					</div>
+				)}
+			</AbsoluteFill>
+		</AbsoluteFill>
+	);
+};
+
+// =========================================================================
+// 7. RAP & DRILL KINETIC IMPACT LYRIC
+// =========================================================================
+export const RapWordImpact: React.FC<{
+	lines: {text: string; isPunch?: boolean}[];
+	accentColor?: string;
+}> = ({lines, accentColor = '#DC2626'}) => {
+	const f = useCurrentFrame();
+
+	return (
+		<div style={{display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'flex-start'}}>
+			{lines.map((l, i) => (
+				<div
+					key={i}
+					style={{
+						fontSize: l.isPunch ? 92 : 68,
+						fontWeight: 900,
+						fontStyle: 'italic',
+						letterSpacing: -3,
+						textTransform: 'uppercase',
+						color: l.isPunch ? accentColor : '#FFFFFF',
+						textShadow: l.isPunch ? `0 0 40px ${accentColor}` : '0 10px 30px rgba(0,0,0,0.9)',
+						transform: l.isPunch ? 'scale(1.05) skewX(-6deg)' : 'skewX(-6deg)',
+					}}
+				>
+					{l.text}
+				</div>
+			))}
+		</div>
+	);
+};

@@ -1,14 +1,14 @@
 ---
 name: cineflow-lyrics
 description: >-
-  Music video and lyric video production engine for CineFlow (inspired by aansh.ai/skills).
+  Music video and lyric video production engine for CineFlow.
   Use whenever a user provides a song MP3, lyrics, artist/track details, or asks to create a
-  lyric video, music video, Spotify-style card visualizer, or beat-synced music animation.
+  lyric video, music video, Spotify-style card visualizer, rap kinetic drill, lo-fi player, or beat-synced music animation.
 ---
 
 # CineFlow Lyrics & Music Video Production Engine
 
-Inspired by the top viral styles on *aansh.ai/skills* (Spotify particle cards, rap & drill kinetic text, one-take flow lyrics, and glowing aesthetic lyric videos), this skill enables CineFlow to transform any song and lyrics into a viral, studio-grade lyric video.
+CineFlow provides a complete suite of native music video and lyric animation styles (Spotify 3D particle cards, aggressive rap & drill word walls, synthwave neon horizons, and cozy lo-fi vinyl players) to transform any song and lyrics into a studio-grade production.
 
 ---
 
