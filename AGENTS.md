@@ -10,13 +10,13 @@
 1. **Self-Contained Video File (`src/videos/<video-name>.tsx`):**
    - Every video project MUST live in its own single, self-contained file: `src/videos/<video-name>.tsx` (e.g. `src/videos/riad-developer-intro.tsx`).
    - Never write code across multiple scattered files unless explicitly requested.
-   - **DO NOT TOUCH `src/videos/index.tsx` or other videos:** `npm run sync` (`scripts/sync-videos.mjs`) automatically discovers and registers all video files in `src/videos/*.tsx`. If a user deletes a video file, it is automatically removed from the registry.
+   - **DO NOT TOUCH `src/videos/index.tsx` OR ANY OTHER FILE:** `src/videos/index.tsx` is permanently static and uses native Webpack runtime discovery to automatically detect and register any `.tsx` video created under `src/videos/`. You MUST NEVER modify or edit `src/videos/index.tsx`.
 2. **Modifying an Existing Video:**
    - When the user asks to modify or adjust an existing video (e.g. "change scene 2 timing", "update text at 15s"), locate and edit ONLY `src/videos/<video-name>.tsx`. Never touch other files.
 3. **Creating a New Video:**
-   - When the user gives a prompt for a new, separate video concept, create a brand new isolated file: `src/videos/<new-video-name>.tsx`.
+   - When the user gives a prompt for a new, separate video concept, create a brand new isolated file: `src/videos/<new-video-name>.tsx`. Zero edits to `src/videos/index.tsx` or any existing file.
 4. **Always Run TypeScript Verification:**
-   - You MUST run `npm run typecheck` (`npm run sync && npx tsc --noEmit`) after writing or editing code. If there are any type errors, fix them before responding to the user.
+   - You MUST run `npm run typecheck` (`tsc --noEmit`) after writing or editing code. If there are any type errors, fix them before responding to the user.
 
 ---
 

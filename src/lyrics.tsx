@@ -145,54 +145,67 @@ export const SpotifyLyricCard: React.FC<{
 				<div
 					style={{
 						flex: 1,
-						display: 'flex',
-						flexDirection: 'column',
-						justifyContent: 'center',
-						gap: 32,
+						position: 'relative',
 						overflow: 'hidden',
+						maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+						WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
 					}}
 				>
-					{lines.map((line, idx) => {
-						const isCurrent = idx === activeIndex;
-						const isPast = activeIndex !== -1 && idx < activeIndex;
-						const isFuture = activeIndex !== -1 && idx > activeIndex;
+					<div
+						style={{
+							position: 'absolute',
+							top: '35%',
+							left: 0,
+							right: 0,
+							display: 'flex',
+							flexDirection: 'column',
+							gap: 32,
+							transform: `translateY(${activeIndex !== -1 ? -activeIndex * 84 : 0}px)`,
+							transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+						}}
+					>
+						{lines.map((line, idx) => {
+							const isCurrent = idx === activeIndex;
+							const isPast = activeIndex !== -1 && idx < activeIndex;
+							const isFuture = activeIndex !== -1 && idx > activeIndex;
 
-						// Dynamic spring transition on line change
-						const lineProgress = isCurrent ? spr(f, fps, line.startFrame, POP) : 1;
+							// Dynamic spring transition on line change
+							const lineProgress = isCurrent ? spr(f, fps, line.startFrame, POP) : 1;
 
-						return (
-							<div
-								key={idx}
-								style={{
-									display: 'flex',
-									flexDirection: 'column',
-									gap: 6,
-									opacity: isCurrent ? 1 : isPast ? 0.4 : 0.2,
-									transform: isCurrent
-										? `scale(${0.96 + lineProgress * 0.08}) translateX(12px)`
-										: 'scale(1) translateX(0px)',
-									transition: 'opacity 0.25s ease, transform 0.25s ease',
-								}}
-							>
+							return (
 								<div
+									key={idx}
 									style={{
-										fontSize: isCurrent ? 42 : 32,
-										fontWeight: isCurrent ? 900 : 700,
-										letterSpacing: -0.5,
-										color: isCurrent ? '#FFFFFF' : '#A1A1AA',
-										textShadow: isCurrent ? `0 0 25px ${accentColor}99` : undefined,
+										display: 'flex',
+										flexDirection: 'column',
+										gap: 6,
+										opacity: isCurrent ? 1 : isPast ? 0.35 : 0.15,
+										transform: isCurrent
+											? `scale(${0.96 + lineProgress * 0.08}) translateX(12px)`
+											: 'scale(1) translateX(0px)',
+										transition: 'opacity 0.25s ease, transform 0.25s ease',
 									}}
 								>
-									{line.text}
-								</div>
-								{line.translation && isCurrent && (
-									<div style={{fontSize: 22, fontWeight: 500, color: accentColor}}>
-										{line.translation}
+									<div
+										style={{
+											fontSize: isCurrent ? 42 : 32,
+											fontWeight: isCurrent ? 900 : 700,
+											letterSpacing: -0.5,
+											color: isCurrent ? '#FFFFFF' : '#A1A1AA',
+											textShadow: isCurrent ? `0 0 25px ${accentColor}99` : undefined,
+										}}
+									>
+										{line.text}
 									</div>
-								)}
-							</div>
-						);
-					})}
+									{line.translation && isCurrent && (
+										<div style={{fontSize: 22, fontWeight: 500, color: accentColor}}>
+											{line.translation}
+										</div>
+									)}
+								</div>
+							);
+						})}
+					</div>
 				</div>
 
 				{/* Animated Glowing Sparks on Active Line */}

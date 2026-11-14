@@ -4,8 +4,7 @@ description: >-
   Autonomous prompt-to-video generation engine for CineFlow.
   Use whenever a user provides a natural language prompt or concept (e.g. "make a 20s promo video for a SaaS app",
   "create a developer portfolio intro", "build an announcement video", "create a 30s marketing reel").
-  Automatically designs scenes, generates modular code under src/videos/<video-name>/, registers compositions in
-  src/videos/index.tsx, verifies types, and renders to out/<video-name>.mp4.
+  Automatically designs scenes, generates modular code under src/videos/<video-name>.tsx, auto-registers dynamically via Webpack, verifies types, and renders to out/<video-name>.mp4.
 ---
 
 # CineFlow Video Creator (Prompt-to-Video Engine)
@@ -21,28 +20,26 @@ When the user asks for a video (e.g., *"Make a 20-second promo video for my new 
 ```mermaid
 flowchart TD
     A["User Prompt / Video Concept"] --> B["1. Plan Architecture & Scene Breakdown"]
-    B --> C["2. Create src/videos/<video-name>/ Directory"]
-    C --> D["3. Write scenes.tsx (Visuals, Animations & Copy)"]
-    D --> E["4. Write index.tsx (Timeline, Sequences & Composition)"]
-    E --> F["5. Register in src/videos/index.tsx"]
-    F --> G["6. Verify with npx tsc --noEmit"]
-    G --> H["7. Preview in Studio or Render to out/<video-name>.mp4"]
+    B --> C["2. Create Self-Contained src/videos/<video-name>.tsx"]
+    C --> D["3. Write Visuals, Transitions, Audio & SFX"]
+    D --> E["4. Zero Edit to src/videos/index.tsx (Auto-Discovered)"]
+    E --> F["5. Verify with npm run typecheck"]
+    F --> G["6. Preview in Studio or Render to out/<video-name>.mp4"]
 ```
 
 ---
 
-## 2. Directory Structure Conventions
+## 2. Directory Structure & Single-File Isolation
 
-Every video created MUST be fully isolated in its own subfolder inside `src/videos/`:
+Every video created MUST live in its own self-contained file inside `src/videos/`. **NEVER edit `src/videos/index.tsx`**—it automatically discovers and mounts all videos at runtime via Webpack.
 
 ```text
 src/videos/
-├── index.tsx                         # Central registry (renders all compositions)
+├── index.tsx                         # PERMANENT STATIC REGISTRY (Auto-discovers via Webpack - DO NOT EDIT)
 ├── EmptyPlaceholder.tsx              # Fallback / empty state
-└── <video-name>/                     # DEDICATED VIDEO FOLDER (kebab-case)
-    ├── index.tsx                     # Composition root, timeline sequences & video config
-    ├── scenes.tsx                    # Scene components, visuals, and kinetic typography
-    └── config.ts                     # (Optional) Text copy, stats, colors & constants
+├── riad-developer-intro.tsx          # Self-contained video project 1
+├── majaal-spotify-lyrics.tsx         # Self-contained video project 2
+└── <new-video-name>.tsx              # Your new isolated video project
 ```
 
 ---
@@ -153,23 +150,9 @@ export const MyVideo: React.FC = () => {
 
 ---
 
-### Step 4: Register Composition in `src/videos/index.tsx`
+### Step 4: Automatic Discovery (NEVER touch `src/videos/index.tsx`)
 
-Import and mount the new composition inside `<Folder name="Videos">`:
-
-```tsx
-import {MyVideo, MY_VIDEO_CONFIG} from './my-video';
-
-// Inside VideoCompositions:
-<Composition
-  id={MY_VIDEO_CONFIG.id}
-  component={MyVideo}
-  durationInFrames={MY_VIDEO_CONFIG.durationInFrames}
-  fps={MY_VIDEO_CONFIG.fps}
-  width={MY_VIDEO_CONFIG.width}
-  height={MY_VIDEO_CONFIG.height}
-/>
-```
+`src/videos/index.tsx` dynamically discovers and registers all video compositions using native Webpack `require.context`. You do NOT need to write import statements or touch `src/videos/index.tsx` ever. Simply exporting `config` (or `MY_VIDEO_CONFIG`) and the component from `src/videos/<video-name>.tsx` makes it instantly available to Remotion!
 
 ---
 
@@ -177,11 +160,11 @@ import {MyVideo, MY_VIDEO_CONFIG} from './my-video';
 
 1. **Type Check:**
    ```bash
-   npx tsc --noEmit
+   npm run typecheck
    ```
 2. **List Available Compositions:**
    ```bash
-   npx remotion compositions
+   npx remotion compositions src/index.ts
    ```
 3. **Render to Video:**
    ```bash
