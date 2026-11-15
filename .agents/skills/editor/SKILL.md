@@ -27,9 +27,16 @@ flowchart TD
     D --> E5["Broadcast Lower-Thirds (<LowerThird>)"]
     D --> E6["Facecam / PiP (<PictureInPicture>)"]
     D --> E7["Audio Ducking & Music Integration (<Audio>)"]
-    E1 & E2 & E3 & E4 & E5 & E6 & E7 --> F["4. Register in src/videos/index.tsx"]
+    E1 & E2 & E3 & E4 & E5 & E6 & E7 --> F["4. Auto-Discovered by Webpack (Zero Core Edits)"]
     F --> G["5. Preview in Studio & Render to out/<edit-name>.mp4"]
 ```
+
+---
+
+## 2. Zero-Touch Architecture & Workspace Isolation
+1. **Never edit core files:** `src/editor.tsx`, `src/ui.tsx`, and `src/videos/index.tsx` are read-only.
+2. **User Manifest:** Check and update `user-project.json` for active project metadata.
+3. **Self-Contained File:** Write the editing composition strictly in `src/videos/<edit-name>.tsx`.
 
 ---
 

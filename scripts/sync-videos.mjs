@@ -18,6 +18,8 @@ for (const entry of entries) {
 		if (entry.name !== 'index.tsx' && entry.name !== 'EmptyPlaceholder.tsx' && !entry.name.startsWith('test-')) {
 			videoFiles.push(entry.name.replace(/\.tsx$/, ''));
 		}
+	} else if (entry.isDirectory() && existsSync(join(videosDir, entry.name, 'index.tsx'))) {
+		videoFiles.push(entry.name);
 	}
 }
 

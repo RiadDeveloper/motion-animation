@@ -1,61 +1,108 @@
 ---
-name: cineflow
+name: cineflow-shorts
 description: >-
-  Master Autonomous AI Video Director & Skill Orchestrator for CineFlow.
-  Use as the primary entry point whenever a user requests to create, edit, trim, reframe,
-  enhance, or post-produce any video, reel, short, explainer, music/lyric video, or motion animation.
-  Autonomously analyzes user prompts and media, picks the right specialized skill from
-  .agents/skills/<skill-name>/SKILL.md, and executes the complete production end-to-end.
+  Specialized skill for creating high-retention vertical (9:16) motion graphics videos for
+  YouTube Shorts, Instagram Reels, and TikTok using CineFlow. Use whenever the user asks for
+  a short, reel, TikTok video, vertical video, or 9:16 format video (e.g. "make a 15s YouTube short",
+  "create an Instagram Reel about X", "build a viral coding tip short").
 ---
 
-# CineFlow — Master AI Video Director & Skill Orchestrator
+# CineFlow Shorts & Reels Creator (9:16 Vertical Engine)
 
-CineFlow is the central orchestrator for all programmatic video creation, editing, and music video tasks in this repository. When a user provides any prompt, CineFlow autonomously analyzes the intent, picks the appropriate specialized skill, and executes the production.
-
----
-
-## 1. Autonomous Skill Selector
-
-Read the user prompt and automatically pull the specialized skill from `.agents/skills/`:
-
-| User Request | Auto-Selected Skill | Reference Path |
-| :--- | :--- | :--- |
-| **Music & Lyric Videos**<br>Spotify 3D tilted cards, rap & drill word walls, bass kick camera shakes, lo-fi vinyl, synthwave neon | `cineflow-lyrics`<br>`cineflow-audio` | `.agents/skills/lyrics/SKILL.md`<br>`.agents/skills/audio/SKILL.md` |
-| **Editing Existing Footage**<br>Cut, trim, jump cuts, punch zoom, lower-thirds, subtitles, PiP facecam, audio ducking | `cineflow-editor`<br>`cineflow-audio` | `.agents/skills/editor/SKILL.md`<br>`.agents/skills/audio/SKILL.md` |
-| **Explainers & Tech Tutorials**<br>Concepts, code typing in terminal, continuous 3D camera, architecture diagrams | `cineflow-explainers`<br>`cineflow-design` | `.agents/skills/explainers/SKILL.md`<br>`.agents/skills/design/SKILL.md` |
-| **Vertical Shorts & Reels**<br>9:16 mobile feeds, 2s hook, top progress bar, karaoke captions, landscape-to-vertical | `cineflow-shorts`<br>`cineflow-editor` | `.agents/skills/shorts/SKILL.md`<br>`.agents/skills/editor/SKILL.md` |
-| **New Motion Graphics From Scratch**<br>SaaS promos, product intros, kinetic typography, neon glassmorphism | `cineflow-creator`<br>`cineflow-design` | `.agents/skills/creator/SKILL.md`<br>`.agents/skills/design/SKILL.md` |
-| **CLI Rendering & Exporting**<br>Render to MP4, WebM overlay, animated GIF, still thumbnails, concurrency tuning | `cineflow-renderer` | `.agents/skills/renderer/SKILL.md` |
+This skill specializes in designing and generating vertical motion graphic videos optimized for mobile platforms (YouTube Shorts, Instagram Reels, TikTok).
 
 ---
 
-## 2. Standard Production Pipeline: Single-File Isolation
+## 1. Vertical Specifications & Safe Zones
 
-Every video in CineFlow is completely self-contained in a single file under `src/videos/<video-name>.tsx`:
+Mobile social platforms display overlays (captions, username, sound tags, like/comment buttons). Video content must adhere to strict safe zones:
 
-```mermaid
-flowchart LR
-    A["1. Inspect & Plan"] --> B["2. Write Single File src/videos/<project>.tsx"]
-    B --> C["3. Auto-Sync & Verify (npm run typecheck)"]
-    C --> D["4. Deliver Studio & Render Commands"]
+```text
++-----------------------+  Y = 0
+|      TOP BARRIER      |  Avoid crucial content (Profile / Audio tag overlay: 0 - 220px)
++-----------------------+  Y = 220
+|                       |
+|                       |
+|       SAFE ZONE       |  MAIN CONTENT, KINETIC TEXT, VISUALS, METRICS
+|     (1080 x 1300)     |  Keep all vital elements centered within Y: 220px to 1550px
+|                       |
+|                       |
++-----------------------+  Y = 1550
+|    BOTTOM BARRIER     |  Avoid crucial content (Description, Audio, Action buttons)
++-----------------------+  Y = 1920
 ```
 
-### Rule 1: Single-File Isolation
-- When creating a video, write all scenes, dynamic scene-adaptive backgrounds, sound effects, and config inside `src/videos/<video-name>.tsx`.
-- **DO NOT TOUCH `src/videos/index.tsx`:** CineFlow's auto-sync engine (`scripts/sync-videos.mjs`) automatically scans `src/videos/*.tsx` and maintains the registry.
-- **Instant Deletion:** If a user deletes `src/videos/<video-name>.tsx`, that video is immediately erased from the system without leaving any broken references.
+- **Width:** 1080px
+- **Height:** 1920px
+- **FPS:** 30 (or 60 for ultra-fluid motion)
+- **Duration:** Typically 15s (450 frames), 30s (900 frames), or 45s (1350 frames).
 
-### Rule 2: Editing Existing Videos
-- If the user asks to modify an existing video (e.g. "change scene 2 timing", "update text at 20s"), locate and edit ONLY `src/videos/<video-name>.tsx`. Never touch other files.
+---
 
-### Rule 3: Creating New Videos
-- If the user provides a prompt for a different, separate video, create a brand-new file `src/videos/<new-video-name>.tsx`.
+## 2. Retention Mechanics for Vertical Videos
 
-### Rule 4: Mandatory Sound Design & Scene-Adaptive Backgrounds
-- Every video MUST include:
-  1. An upbeat electronic soundtrack: `<Audio src={staticFile('sfx/beat.wav')} volume={0.35} />`.
-  2. Sound effects on element entrances: `sfx/whoosh.wav`, `sfx/pop.wav`, `sfx/impact.wav`, `sfx/click.wav`, `sfx/chime.wav`.
-  3. Unique, custom atmospheric background for each scene (never the exact same background repeated throughout).
+To maximize viewer engagement on short-form feeds:
 
-### Rule 5: Verification
-- Always run `npm run typecheck` (`npm run sync && npx tsc --noEmit`) before responding to the user.
+1. **The 2-Second Visual Hook:**
+   - Immediately display high-contrast, kinetic headline using `<Kinetic />` within frames 0–45.
+   - Animate a shockwave ring or visual burst at frame 0.
+2. **Top/Bottom Animated Progress Bar:**
+   - Use the pre-built `<EditorProgressBar position="top" color={C.lime} />` from `../../editor`, or customize:
+   ```tsx
+   import {EditorProgressBar} from '../../editor';
+   // Inside composition:
+   <EditorProgressBar position="top" height={6} color={C.lime} />
+   ```
+3. **Pacing & Cuts:**
+   - Switch scenes or layout angles every 2.5 to 4 seconds (75 to 120 frames).
+   - Use staggered spring cards (`POP` physics) so the screen is continuously animated.
+4. **Bold Kinetic Typography:**
+   - Text size should be large ($72\text{px} - 120\text{px}$) for readability on small smartphone screens.
+
+---
+
+## 3. Standard Shorts Directory Structure
+
+Follow the repository standard inside `src/videos/`:
+
+```text
+src/videos/<short-name>/
+├── index.tsx              # Composition (1080x1920), progress bar, background, audio
+└── scenes.tsx             # Hook scene, core value scenes, CTA scene
+```
+
+**Example Composition Definition:**
+```tsx
+export const SHORT_CONFIG = {
+  id: 'CodingTipsShort',
+  fps: 30,
+  durationInFrames: 30 * 20, // 20 seconds = 600 frames
+  width: 1080,
+  height: 1920,
+};
+```
+
+---
+
+## 4. Registering and Rendering
+
+Add the short to `src/videos/index.tsx`:
+
+```tsx
+import {CodingTipsShort, SHORT_CONFIG} from './coding-tips-short';
+
+// Inside <Folder name="Videos">:
+<Composition
+  id={SHORT_CONFIG.id}
+  component={CodingTipsShort}
+  durationInFrames={SHORT_CONFIG.durationInFrames}
+  fps={SHORT_CONFIG.fps}
+  width={SHORT_CONFIG.width}
+  height={SHORT_CONFIG.height}
+/>
+```
+
+Render command:
+```bash
+npx remotion render src/index.ts CodingTipsShort out/coding-tips-short.mp4
+```

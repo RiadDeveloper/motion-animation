@@ -1,112 +1,119 @@
 # CineFlow AI Agent Guardrails & Operating Standards
 
 > **MANDATORY INSTRUCTIONS FOR ALL AI CODING AGENTS (Antigravity, Cursor, Claude Code, Codex, Copilot)**  
-> Read this file before creating or editing any video in this repository. Follow these strict rules to ensure 100% bug-free, studio-grade video production on the first attempt.
+> This project is a **public open-source AI video creation and editing engine on GitHub**.  
+> When any user prompts you to create a video, edit footage, or generate a music lyric video, you MUST strictly adhere to these guardrails to ensure **100% bug-free, studio-grade video production on the first attempt with ZERO contamination to the core engine**.
 
 ---
 
-## 🛑 1. Core Architecture Rules (Single-File Isolation & Zero Collateral Edit)
+## 🛑 1. Core Architecture Rules (The Zero-Touch Core & Workspace Isolation)
 
-1. **Self-Contained Video File (`src/videos/<video-name>.tsx`):**
-   - Every video project MUST live in its own single, self-contained file: `src/videos/<video-name>.tsx` (e.g. `src/videos/riad-developer-intro.tsx`).
-   - Never write code across multiple scattered files unless explicitly requested.
-   - **DO NOT TOUCH `src/videos/index.tsx` OR ANY OTHER FILE:** `src/videos/index.tsx` is permanently static and uses native Webpack runtime discovery to automatically detect and register any `.tsx` video created under `src/videos/`. You MUST NEVER modify or edit `src/videos/index.tsx`.
-2. **Modifying an Existing Video:**
-   - When the user asks to modify or adjust an existing video (e.g. "change scene 2 timing", "update text at 15s"), locate and edit ONLY `src/videos/<video-name>.tsx`. Never touch other files.
-3. **Creating a New Video:**
-   - When the user gives a prompt for a new, separate video concept, create a brand new isolated file: `src/videos/<new-video-name>.tsx`. Zero edits to `src/videos/index.tsx` or any existing file.
-4. **Always Run TypeScript Verification:**
-   - You MUST run `npm run typecheck` (`tsc --noEmit`) after writing or editing code. If there are any type errors, fix them before responding to the user.
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       IMMUTABLE CORE ENGINE (NEVER TOUCH)                   │
+│  src/ui.tsx  •  src/editor.tsx  •  src/lyrics.tsx  •  src/videos/index.tsx   │
+│  src/Root.tsx  •  src/index.ts  •  scripts/*  •  package.json               │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ (Read-Only Imports)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        USER WORKSPACE (AI OPERATES HERE ONLY)               │
+│  1. Root User Manifest : user-project.json (User info, channel, active meta)│
+│  2. User Video Projects: src/videos/<video-name>.tsx (100% self-contained) │
+│  3. User Media Assets  : public/<asset-name> (User MP3, clips, cover SVGs)  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Core Engine is 100% Read-Only & Protected:**
+   - **NEVER modify or touch core engine files:**  
+     `src/ui.tsx`, `src/editor.tsx`, `src/lyrics.tsx`, `src/index.ts`, `src/Root.tsx`, `src/videos/index.tsx`, `src/videos/EmptyPlaceholder.tsx`, `package.json`, `tsconfig.json`.
+   - The core engine is what gets pushed to GitHub as a clean public framework. It must remain pure, stable, and completely untouched.
+   - `src/videos/index.tsx` uses native dynamic Webpack discovery (`require.context`) to automatically detect any `.tsx` video created under `src/videos/`. You MUST NEVER edit `src/videos/index.tsx`.
+
+2. **Root User Manifest (`user-project.json`):**
+   - The user's branding, YouTube channel name (e.g. **"Musical Riad"**), brand colors, active project name, and composition details reside in the root directory file: `user-project.json`.
+   - When a user asks to create or edit a video, read `user-project.json` to honor their channel identity and update `activeProject` accordingly.
+
+3. **Self-Contained Video Project (`src/videos/<video-name>.tsx`):**
+   - Every video project MUST live in its own single, self-contained file: `src/videos/<video-name>.tsx` (or a dedicated project folder `src/videos/<video-name>/index.tsx`).
+   - If the user deletes `src/videos/<video-name>.tsx`, that video is immediately erased from the system without leaving any broken references or collateral changes in the repository.
+
+4. **Modifying an Existing Video vs Creating a New Video:**
+   - **Modifying:** When the user asks to edit or adjust an existing video (e.g. "change scene 2 timing", "update text at 15s"), locate and edit ONLY `src/videos/<video-name>.tsx`.
+   - **New Video:** When the user provides a prompt for a new, separate video concept, create a brand-new isolated file: `src/videos/<new-video-name>.tsx`.
+
+5. **Mandatory TypeScript Verification:**
+   - You MUST run `npm run typecheck` (`node scripts/sync-videos.mjs && tsc --noEmit`) after writing or editing code. If there are any errors, fix them before answering.
 
 ---
 
-## 🔊 2. Mandatory Audio Design & Sound Effects (SFX)
+## 🎬 2. The Three Autonomous AI Video Workflows
+
+### 🅰️ Workflow 1: Autonomous Video Generation From Prompt
+When a user says: *"Make a 20s promo video for a SaaS app"*, *"Create a developer intro"*, or *"Build an explainer video"*:
+1. Select the visual aesthetic (glassmorphism cards, glowing neons, cyber matrix, kinetic typography).
+2. Write the self-contained video inside `src/videos/<video-name>.tsx`.
+3. Apply unique, scene-adaptive dynamic backgrounds (never repeat the exact same background across all scenes).
+4. Synchronize animation sound effects (`sfx/whoosh.wav`, `sfx/pop.wav`, `sfx/impact.wav`, `sfx/click.wav`, `sfx/chime.wav`) with an ambient electronic beat.
+5. Update `user-project.json` with the new composition ID.
+
+### 🅱️ Workflow 2: Autonomous Video Editing & Post-Production
+When a user provides an existing video file (in `public/`) and says: *"Edit this video"*, *"Reframe to 9:16 vertical"*, *"Add subtitles and lower-thirds"*, or *"Make a high-retention reel"*:
+1. Use `<VideoClip>` to trim, scale, and adjust speed/volume.
+2. Use `<ReframeVertical>` to convert 16:9 widescreen to 9:16 vertical shorts with blurred background.
+3. Use `<CaptionOverlay>` for word-by-word active highlighting karaoke subtitles.
+4. Use `<LowerThird>` for broadcast-grade title cards and `<PunchZoom>` for spoken emphasis.
+5. Apply `<DuckedMusic>` so background music automatically ducks when voiceover plays.
+
+### 🅲️ Workflow 3: Autonomous Music & Lyric Video Production
+When a user supplies an audio track (e.g. `public/Majaal.mp3`) and song lyrics:
+1. **Audio Analysis & Timestamping:**
+   - Inspect song length ($30\text{ fps} \times \text{duration in seconds}$).
+   - Autonomously analyze rhythm, vocal bursts, and acoustic energy peaks to create millisecond-accurate word-by-word timestamps (`words: LyricWord[]`).
+2. **Custom Album Art & Channel Branding:**
+   - If user specifies a YouTube channel (e.g. **"Musical Riad"**), prominently embed their channel badge, verified artist icon, and custom album artwork (e.g. `public/cover-musical-riad.svg`).
+3. **Aesthetic Selection:**
+   - Spotify 3D floating particle card (`<SpotifyLyricCard>`).
+   - Aggressive rap/drill kinetic word wall (`<WordWall3D>`, `<BeatCameraShake>`).
+   - Cozy lo-fi spinning vinyl player (`<VinylRecordPlayer>`).
+   - Synthwave retro neon horizon (`<NeonSynthHorizon>`).
+4. **Vocal Lighting:**
+   - Active sung words light up in electric green/neon with glowing sparks as the singer vocalizes.
+
+---
+
+## 🔊 3. Mandatory Audio Design Standards
 
 Never produce silent videos. Every video MUST include complete audio design:
-1. **Background Soundtrack:**
-   - Play an upbeat modern electronic beat or ambient music track throughout the video:
-     `<Audio src={staticFile('sfx/beat.wav')} volume={0.35} />` (or user-supplied music in `public/`).
-2. **Synchronized Animation Sound Effects (SFX):**
-   Use the pre-built, studio-grade sound effects from `public/sfx/`:
-   - `sfx/whoosh.wav` — Smooth airy sweep for scene transitions, card entrances, and slide-ins.
-   - `sfx/pop.wav` — Punchy bubble pop for badges, icons, and spring elements.
-   - `sfx/impact.wav` — Deep 808 sub-bass boom for big headlines, milestone numbers, and dramatic drops.
-   - `sfx/click.wav` — Sleek tech UI transient click for typing lines, code, and bullet points.
-   - `sfx/chime.wav` — Sparkling bell chord for achievements, awards, and certifications.
-   - `sfx/riser.wav` — Tension swell leading into high-impact reveals.
+1. **Soundtrack:** `<Audio src={staticFile('sfx/beat.wav')} volume={0.35} />` (or user's audio in `public/`).
+2. **Animation Sound Effects (SFX):**
+   - `sfx/whoosh.wav` — Transitions and card slide-ins.
+   - `sfx/pop.wav` — Badges, icons, buttons.
+   - `sfx/impact.wav` — Big headlines, milestones, beat drops.
+   - `sfx/click.wav` — Typing lines and UI clicks.
+   - `sfx/chime.wav` — Achievements, awards, success states.
+   - `sfx/riser.wav` — Tension builds before big reveals.
 
 ---
 
-## 🎨 3. Dynamic Scene-Adaptive Backgrounds (Never Same Background Throughout)
+## 🎨 4. Aesthetic Typography & Design Tokens
 
-Never use a single repetitive background across the entire video. Each scene MUST feature a unique atmospheric backdrop tailored to its content:
-- **Intro / Reveal:** Cosmic obsidian void with rotating nebula vortex and central orbiting particles.
-- **Skills / Who I Am:** Cyber matrix grid with vertical drifting data lines.
-- **Developer / GitHub:** Deep indigo slate with interconnected commit graph nodes and hexagonal mesh.
-- **Projects / Showcase:** Multi-layered glass prism showcase with soft drifting depth bokeh.
-- **Tech Stack:** 3D cyber particle accelerator with concentric pulsing energy rings and warp streaks.
-- **Numbers / Metrics / Financials:** Radiant gold and amber luxury sun with upward floating golden embers.
-- **Outro / Contact:** Studio creator spotlight with sweeping laser horizon and lime glow.
-
----
-
-## 🧰 4. Use Built-In Primitives (Never Reinvent the Wheel)
-
-Do NOT write raw unstyled CSS, install external animation libraries (like framer-motion or gsap), or reinvent animations. Always import from our bulletproof kits:
-
-### From `src/ui.tsx` (Motion Graphics Kit)
-- `Background` — Ambient glowing radial orbs, drift grid, floating particles.
-- `Kinetic` — Letter-by-letter bouncy spring entrance for headlines.
-- `Rise` — Slide, fade, and de-blur entrance with directional control (`up`, `left`, `right`, `scale`).
-- `Scene` — Automatic scene transition with scale and blur overlap.
-- `Tile` — Frosted glassmorphic container with glowing drop shadow.
-- `Photo` — Avatar / image in a glowing ring with orbiting particles, with `src` or initials fallback.
-- `spr(frame, fps, delay, config)` — Spring helper with `POP` and `SMOOTH` configs.
-- `C` & `gradientText()` — Color palette tokens (`C.bg`, `C.lime`, `C.violet`, `C.text`, `C.dim`).
-- `Brand` & `Line` & `icons` — SVG icon utilities and Simple Icons wrapper.
-
-### From `src/editor.tsx` (Video Editing & Explainer Kit)
-- `VideoClip` — Video player with trimming (`startFrom`, `endAt`), volume, and filters.
-- `ReframeVertical` — Converts 16:9 widescreen videos to 9:16 vertical reels with blurred backdrop.
-- `PunchZoom` — Dynamic camera zoom-in/out for jump cuts and spoken emphasis.
-- `LowerThird` — Broadcast-grade speaker title card.
-- `CaptionOverlay` — Word-by-word active highlighting karaoke subtitles.
-- `ScreenshotMockup` — Renders images/screenshots inside a modern macOS window frame.
-- `TerminalTypist` — Animated terminal typing CLI commands line-by-line with blinking cursor.
-- `Card3D` — 3D perspective card with gyroscope tilt and specular sheen.
-- `OneTakeCamera` — Smooth continuous 3D camera pan and tilt.
-- `AudioWaveform` — Pulsing visualizer bars reacting to speech/music.
-- `DuckedMusic` — Background music that automatically ducks volume during voiceover.
-- `EditorProgressBar` — Sleek animated timeline progress bar (top/bottom).
-- `KeywordCallout` — Punchy animated pop card for spoken keyphrases.
-- `PictureInPicture` — PiP camera/facecam overlay.
-
-### From `src/lyrics.tsx` (Music Video Kit)
-- `SpotifyLyricCard` — 3D tilted Spotify card with cover art, track info, and live singing lines.
-- `WordWall3D` — Massive 3D lyric word wall drifting in the background.
-- `VinylRecordPlayer` — Spinning 33 RPM vinyl record player with floating lyrics for lo-fi/acoustic tracks.
-- `NeonSynthHorizon` — Scrolling 3D perspective grid horizon and synth sun for EDM/synthwave.
-- `BeatCameraShake` — Frame shake synced to heavy 808 bass kicks.
-- `MusicPlayerHUD` — Glassmorphic playback scrubber and timer.
-- `RapWordImpact` — Aggressive kinetic typography slamming on screen for rap/drill tracks.
+Always import from `@remotion/google-fonts` and CineFlow kits:
+- **Headings & Titles:** `Outfit` (weights: 700, 800, 900) for modern, geometric display.
+- **Body, Lyrics & UI:** `PlusJakartaSans` (weights: 500, 600, 700) for ultra-clean readability.
+- **Color Tokens (`C` in `src/ui.tsx`):**
+  - `C.bg`: `#0B0B0F` (Cosmic obsidian)
+  - `C.lime`: `#A3E635` / `#1ED760` (Vibrant electric green)
+  - `C.violet`: `#7C3AED` (Royal neon violet)
+  - `C.text`: `#F5F5F7` (Pristine off-white)
+  - `C.dim`: `#A1A1AA` (Soft muted slate)
 
 ---
 
-## ⏱️ 5. Strict Frame & Timing Math
+## 📋 5. Mandatory 4-Step Checklist Before Answering the User
 
-- **Standard FPS:** Always default to `fps: 30`.
-- **Duration Formula:** $\text{durationInFrames} = \text{seconds} \times 30$
-  - 15 seconds = 450 frames
-  - 30 seconds = 900 frames
-  - 60 seconds = 1800 frames
-- **Assets:** Any media referenced with `staticFile('name.ext')` MUST reside in the `public/` folder.
-
----
-
-## 📋 6. Mandatory 4-Step Checklist Before Answering the User
-
-1. [ ] Code written in a single self-contained file: `src/videos/<video-name>.tsx`.
-2. [ ] Zero modifications to other files (auto-sync handles registration).
+1. [ ] Code written strictly inside `src/videos/<video-name>.tsx` (zero edits to core files).
+2. [ ] User branding & metadata updated in `user-project.json`.
 3. [ ] `npm run typecheck` passes with 0 errors.
-4. [ ] Response contains the preview command (`npm run studio`) and render command:
+4. [ ] Response contains the preview command (`npm run studio`) and render command:  
        `npx remotion render src/index.ts <CompositionId> out/<video-name>.mp4`.

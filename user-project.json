@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "projectInfo": {
+    "name": "CineFlow Autonomous Studio",
+    "version": "1.0.0",
+    "description": "Public GitHub Open-Source Autonomous AI Video & Music Video Creation Engine"
+  },
+  "user": {
+    "name": "Creator",
+    "channelName": "My Channel",
+    "channelType": "Motion Graphics & Music",
+    "youtubeVerified": true,
+    "brandColor": "#1ED760",
+    "accentColor": "#A3E635",
+    "defaultFps": 30,
+    "defaultResolution": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "activeProject": null,
+  "guardrails": {
+    "userWorkspace": "src/videos/",
+    "userAssets": "public/",
+    "rootUserFile": "user-project.json",
+    "coreEngineProtected": [
+      "src/ui.tsx",
+      "src/editor.tsx",
+      "src/lyrics.tsx",
+      "src/index.ts",
+      "src/Root.tsx",
+      "src/videos/index.tsx",
+      "src/videos/EmptyPlaceholder.tsx",
+      "package.json",
+      "tsconfig.json",
+      "remotion.config.ts"
+    ],
+    "rule": "AI agents MUST NEVER edit or modify core engine files. All user creations, prompts, edits, and lyric alignments must strictly live in src/videos/<video-name>.tsx and user-project.json."
+  }
+}

@@ -16,14 +16,14 @@ declare const require: {
 // Webpack require.context automatically discovers all .tsx files in this folder
 // NO manual imports or file changes needed in index.tsx ever!
 // @ts-ignore
-const videoReq = require.context('./', false, /\.tsx$/);
+const videoReq = require.context('./', true, /\.tsx$/);
 
 const discoveredVideos = videoReq
 	.keys()
-	.filter((k: string) => !k.includes('index') && !k.includes('EmptyPlaceholder'))
+	.filter((k: string) => k !== './index.tsx' && !k.endsWith('EmptyPlaceholder.tsx'))
 	.map((key: string) => {
 		const mod = videoReq(key);
-		const fileName = key.replace(/^\.\//, '').replace(/\.tsx$/, '');
+		const fileName = key.replace(/^\.\//, '').replace(/\/index\.tsx$/, '').replace(/\.tsx$/, '');
 		const conf =
 			mod.config ||
 			mod.CONFIG ||

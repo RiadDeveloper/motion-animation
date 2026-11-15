@@ -4,11 +4,20 @@ description: >-
   Music video and lyric video production engine for CineFlow.
   Use whenever a user provides a song MP3, lyrics, artist/track details, or asks to create a
   lyric video, music video, Spotify-style card visualizer, rap kinetic drill, lo-fi player, or beat-synced music animation.
+  Autonomously analyzes audio waveforms/bursts, generates custom channel cover art, and synchronizes word-by-word lyrics.
 ---
 
 # CineFlow Lyrics & Music Video Production Engine
 
-CineFlow provides a complete suite of native music video and lyric animation styles (Spotify 3D particle cards, aggressive rap & drill word walls, synthwave neon horizons, and cozy lo-fi vinyl players) to transform any song and lyrics into a studio-grade production.
+CineFlow provides an autonomous engine to convert any user song and lyrics into a broadcast-grade music video. It analyzes audio bursts, computes frame-accurate word timestamps, incorporates custom artist/channel branding (e.g. YouTube channels like **"Musical Riad"**), and renders 3D music players.
+
+---
+
+## 🛑 Guardrails & Architecture Standards
+1. **Zero Core Edits:** Never modify `src/lyrics.tsx`, `src/ui.tsx`, or `src/videos/index.tsx`.
+2. **Single-File Isolation:** The entire lyric video must live in `src/videos/<song-name>.tsx`.
+3. **Channel Branding:** Read `user-project.json` for the user's YouTube channel name, verified status, and brand colors.
+4. **User Assets:** Audio files and custom cover SVGs/art reside in `public/`.
 
 ---
 
@@ -16,96 +25,98 @@ CineFlow provides a complete suite of native music video and lyric animation sty
 
 ```mermaid
 flowchart TD
-    Song["User Song (MP3/WAV) + Lyrics"] --> StyleSelector{"Select Lyric Aesthetic"}
+    Song["User Song (MP3) + Lyrics"] --> Analyze["1. Audio Waveform & Burst Analysis"]
+    Analyze --> Cover["2. Custom Channel Cover Art (SVG/PNG)"]
+    Cover --> StyleSelector{"3. Select Lyric Aesthetic"}
     
-    StyleSelector -->|"1. Spotify 3D Particle Card"| S1["<SpotifyLyricCard /> + Sparks + Tilted 3D Float"]
-    StyleSelector -->|"2. Rap & Drill Kinetic"| S2["<WordWall3D /> + <BeatCameraShake /> + Crimson/Neon Grade"]
-    StyleSelector -->|"3. One-Take Flow Parallax"| S3["<OneTakeCamera /> + Hero Words Moving with Meaning"]
-    StyleSelector -->|"4. Minimalist Glow"| S4["<MusicPlayerHUD /> + Word-by-Word Glowing Karaoke"]
+    StyleSelector -->|"Spotify 3D Particle Card"| S1["<SpotifyLyricCard /> + Equalizer + 3D Aurora Float"]
+    StyleSelector -->|"Rap & Drill Kinetic"| S2["<WordWall3D /> + <BeatCameraShake /> + Crimson Grade"]
+    StyleSelector -->|"One-Take Flow Parallax"| S3["<OneTakeCamera /> + Hero Words Drifting in 3D"]
+    StyleSelector -->|"Minimalist Aesthetic Glow"| S4["<MusicPlayerHUD /> + Word-by-Word Karaoke Lighting"]
     
-    S1 & S2 & S3 & S4 --> Assembly["Assemble in src/videos/<song-name>/"]
-    Assembly --> Render["Preview (npm run studio) & Render MP4"]
-```
-
-| Aesthetic | Vibe & Key Visuals | Core Primitives |
-| :--- | :--- | :--- |
-| **Spotify 3D Lyric Card** (`/spotify-particle-lyrics`) | Tilted 3D glass card with album cover art, song title, artist name, and sung lines lighting up with glowing sparks on the beat. | `<SpotifyLyricCard>`, `<Audio>`, `<Background>` |
-| **Rap & Drill Kinetic** (`/red-rap-lyrics`) | Dark crimson or cyber neon color grade, drifting 3D background wall of words, intense 808 bass kick camera shakes, and DAMN! slams. | `<WordWall3D>`, `<BeatCameraShake>`, `<KeywordCallout>` |
-| **One-Take Flow & Parallax** (`/one-take-forest-lyrics`) | Seamless continuous camera glide through a 3D environment with hero words that move with their meaning (rising, burning, glowing). | `<OneTakeCamera>`, `<Card3D>`, `<Kinetic>` |
-| **Minimalist Aesthetic Glow** (`/glow-lyrics`) | Elegant typography, soft neon aura, and a glassmorphic music player HUD at the bottom. | `<MusicPlayerHUD>`, `<AudioWaveform>` |
-
----
-
-## 2. Pre-Built Lyric Primitives (`src/lyrics.tsx`)
-
-Import directly from `../../lyrics`:
-
-```tsx
-import {
-  SpotifyLyricCard,
-  WordWall3D,
-  BeatCameraShake,
-  MusicPlayerHUD,
-} from '../../lyrics';
+    S1 & S2 & S3 & S4 --> Assembly["Assemble in src/videos/<song-name>.tsx"]
+    Assembly --> Sync["Auto-Register via Webpack"]
+    Sync --> Render["Preview (npm run studio) & Render MP4"]
 ```
 
 ---
 
-## 3. Step-by-Step Production Recipe
+## 2. Autonomous Audio & Lyric Sync Recipe
 
-### Step 1: Place Song & Prepare Lyrics
-1. Place the song file in `public/` (e.g. `public/song.mp3`).
-2. If available, place cover art in `public/cover.jpg`.
-3. Inspect the song length using the metadata inspector:
-   ```bash
-   node scripts/inspect-video.mjs "public/song.mp3"
-   ```
-4. Prepare timestamped lyric lines in frames ($30 \text{ frames} = 1 \text{ second}$):
-   ```ts
-   const lyrics = [
-     {startFrame: 0, endFrame: 90, text: "Lost in the neon lights tonight"},
-     {startFrame: 90, endFrame: 180, text: "Chasing the shadows out of sight"},
-     {startFrame: 180, endFrame: 270, text: "Can you hear the bassline drop?"},
-   ];
-   ```
+When a user provides an MP3 and lyrics:
 
----
+### Step 1: Inspect Audio Length & Dynamics
+```bash
+node scripts/inspect-video.mjs "public/<song-file>.mp3"
+```
+Determine the total duration in seconds and calculate `durationInFrames = Math.round(seconds * 30)`.
 
-### Step 2: Implement Composition (`src/videos/<song-name>/index.tsx`)
+### Step 2: Vocal Burst & Word-Level Timestamping
+Map each line and word to exact frame intervals ($30\text{ frames} = 1\text{ second}$):
+```typescript
+interface LyricWord {
+  text: string;
+  startFrame: number;
+  endFrame: number;
+}
 
-#### Example: Spotify 3D Particle Lyric Video
+interface LyricLine {
+  startFrame: number;
+  endFrame: number;
+  text: string;
+  translation?: string; // Poetic English translation
+  words?: LyricWord[]; // Word-by-word karaoke timestamps
+}
+```
+
+### Step 3: Custom Cover Art Generation
+If the user specifies a channel name (e.g. **"Musical Riad"**), generate a dedicated SVG cover in `public/cover-<project>.svg` featuring:
+- Vinyl record grooves and glowing core
+- Track title and artist name
+- User's YouTube channel badge (e.g. `▶ MUSICAL RIAD • OFFICIAL`)
+
+### Step 4: Write Self-Contained Video (`src/videos/<song-name>.tsx`)
 ```tsx
 import React from 'react';
-import {AbsoluteFill, Audio, staticFile} from 'remotion';
-import {Background, C, FONT} from '../../ui';
-import {SpotifyLyricCard} from '../../lyrics';
+import { AbsoluteFill, Audio, staticFile, useCurrentFrame } from 'remotion';
+import { EditorProgressBar } from '../editor';
+import { LyricLine, SpotifyLyricCard, WordWall3D, FONT_OUTFIT, FONT_PLUS_JAKARTA } from '../lyrics';
+import { C } from '../ui';
 
-export const LYRICS_CONFIG = {
-  id: 'NeonNightsLyrics',
+export const config = {
+  id: 'SongTitleLyrics',
   fps: 30,
-  durationInFrames: 30 * 60, // 60 seconds
+  durationInFrames: 3823,
   width: 1920,
   height: 1080,
 };
 
-const lines = [
-  {startFrame: 30, endFrame: 120, text: "Take me back to where we started"},
-  {startFrame: 120, endFrame: 210, text: "Before the promises were broken"},
-  {startFrame: 210, endFrame: 300, text: "Running through the midnight rain"},
-];
-
-export const NeonNightsLyrics: React.FC = () => {
+export const SongTitleLyrics: React.FC = () => {
   return (
-    <AbsoluteFill style={{backgroundColor: C.bg, fontFamily: FONT}}>
-      <Background />
-      <SpotifyLyricCard
-        trackTitle="Neon Nights"
-        artistName="CineFlow Artist"
-        coverImage="cover.jpg"
-        accentColor="#1ED760"
-        lines={lines}
-      />
-      <Audio src={staticFile('song.mp3')} />
+    <AbsoluteFill style={{ backgroundColor: '#07070E', fontFamily: FONT_PLUS_JAKARTA }}>
+      {/* 1. Original User Song Track */}
+      <Audio src={staticFile('song.mp3')} volume={1} />
+
+      {/* 2. Dynamic Cosmic Aurora Backdrop & 52-Bar Audio Spectrum */}
+      <AmbientBackdrop />
+
+      {/* 3. Top Progress Bar */}
+      <EditorProgressBar position="top" height={4} color="#1ED760" />
+
+      {/* 4. Center 3D Floating Player Card */}
+      <AbsoluteFill style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <SpotifyLyricCard
+          lines={lyrics}
+          trackTitle="Song Title"
+          artistName="Artist Name"
+          channelName="Musical Riad"
+          verified={true}
+          coverImage="cover-song.svg"
+          accentColor="#1ED760"
+          width={880}
+          height={940}
+        />
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -113,21 +124,10 @@ export const NeonNightsLyrics: React.FC = () => {
 
 ---
 
-### Step 3: Register & Render
-1. Register in `src/videos/index.tsx`.
-2. Check types: `npx tsc --noEmit`.
-3. Preview in studio: `npm run studio`.
-4. Render MP4:
-   ```bash
-   npx remotion render src/index.ts NeonNightsLyrics out/neon-nights.mp4
-   ```
+## 3. Verification & Delivery
 
----
-
-## 4. How Users Prompt CineFlow for Lyric Videos
-
-Users can prompt in simple, natural language:
-
-> *"Here is `public/song.mp3` with cover art `public/cover.jpg`. Create a 16:9 Spotify 3D particle lyric video where the card floats in 3D, and the words light up in electric green as they are sung."*
-
-> *"Make a high-energy 9:16 vertical rap lyric video for `public/track.mp3`. Use a dark red aesthetic, a drifting 3D word wall in the background, and camera shake on every bass drop."*
+1. Run `npm run typecheck` (`node scripts/sync-videos.mjs && tsc --noEmit`).
+2. Update `user-project.json` active project info.
+3. Deliver studio and render commands:
+   - Preview: `npm run studio`
+   - Render: `npx remotion render src/index.ts <CompositionId> out/<song-name>.mp4`

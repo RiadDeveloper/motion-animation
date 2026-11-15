@@ -29,17 +29,18 @@ flowchart TD
 
 ---
 
-## 2. Directory Structure & Single-File Isolation
+## 2. Directory Structure & Zero-Touch Core Architecture
 
-Every video created MUST live in its own self-contained file inside `src/videos/`. **NEVER edit `src/videos/index.tsx`**—it automatically discovers and mounts all videos at runtime via Webpack.
+Every video created MUST live in its own self-contained file inside `src/videos/`. **NEVER edit core framework files (`src/ui.tsx`, `src/editor.tsx`, `src/lyrics.tsx`, `src/videos/index.tsx`)**—the repository uses dynamic Webpack discovery to mount videos automatically.
 
 ```text
-src/videos/
-├── index.tsx                         # PERMANENT STATIC REGISTRY (Auto-discovers via Webpack - DO NOT EDIT)
-├── EmptyPlaceholder.tsx              # Fallback / empty state
-├── riad-developer-intro.tsx          # Self-contained video project 1
-├── majaal-spotify-lyrics.tsx         # Self-contained video project 2
-└── <new-video-name>.tsx              # Your new isolated video project
+├── user-project.json                 # ROOT USER MANIFEST (User branding, active project meta)
+├── public/                           # USER MEDIA & SFX (MP3 songs, videos, cover art SVGs)
+└── src/videos/
+    ├── index.tsx                     # PERMANENT STATIC REGISTRY (Auto-discovers via Webpack - DO NOT EDIT)
+    ├── EmptyPlaceholder.tsx          # Fallback / empty state
+    ├── majaal-spotify-lyrics.tsx     # Self-contained video project 1
+    └── <new-video-name>.tsx          # Your new isolated video project
 ```
 
 ---

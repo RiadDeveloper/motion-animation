@@ -7,22 +7,43 @@ import {
 	useCurrentFrame,
 	useVideoConfig,
 } from 'remotion';
-import {C, clamp, gradientText, POP, spr} from './ui';
+import { loadFont as loadOutfit } from '@remotion/google-fonts/Outfit';
+import { loadFont as loadPlusJakartaSans } from '@remotion/google-fonts/PlusJakartaSans';
+import { C, clamp, gradientText, POP, spr } from './ui';
+
+export const { fontFamily: FONT_OUTFIT } = loadOutfit('normal', {
+	weights: ['400', '600', '700', '800', '900'],
+	subsets: ['latin'],
+});
+
+export const { fontFamily: FONT_PLUS_JAKARTA } = loadPlusJakartaSans('normal', {
+	weights: ['400', '500', '600', '700', '800'],
+	subsets: ['latin'],
+});
 
 // =========================================================================
 // 1. SPOTIFY 3D TILTED LYRICS CARD
 // =========================================================================
+export interface LyricWord {
+	text: string;
+	startFrame: number;
+	endFrame: number;
+}
+
 export interface LyricLine {
 	startFrame: number;
 	endFrame: number;
 	text: string;
 	translation?: string; // Optional meaning/translation
+	words?: LyricWord[]; // Frame-accurate word-level timestamps
 }
 
 export const SpotifyLyricCard: React.FC<{
 	lines: LyricLine[];
 	trackTitle: string;
 	artistName: string;
+	channelName?: string;
+	verified?: boolean;
 	coverImage?: string;
 	accentColor?: string;
 	cardTiltX?: number;
@@ -33,25 +54,57 @@ export const SpotifyLyricCard: React.FC<{
 	lines,
 	trackTitle,
 	artistName,
+	channelName = 'Musical Riad',
+	verified = true,
 	coverImage,
 	accentColor = '#1ED760', // Spotify green
-	cardTiltX = 8,
-	cardTiltY = -12,
-	width = 820,
-	height = 920,
+	cardTiltX = 7,
+	cardTiltY = -10,
+	width = 860,
+	height = 940,
 }) => {
 	const f = useCurrentFrame();
-	const {fps} = useVideoConfig();
+	const {fps, durationInFrames} = useVideoConfig();
 
-	// Find active line index
-	const activeIndex = lines.findIndex((l) => f >= l.startFrame && f < l.endFrame);
-	const activeLine = activeIndex !== -1 ? lines[activeIndex] : null;
+	// Find active line index: the latest line whose startFrame <= f
+	let activeIndex = 0;
+	for (let i = 0; i < lines.length; i++) {
+		if (f >= lines[i].startFrame) {
+			activeIndex = i;
+		} else {
+			break;
+		}
+	}
+	const activeLine = lines[activeIndex] || lines[0];
+
+	// Smooth scroll transition: in the 12 frames leading up to the NEXT line, smoothly advance position
+	let smoothActiveIndex = activeIndex;
+	if (activeIndex < lines.length - 1) {
+		const nextStart = lines[activeIndex + 1].startFrame;
+		if (f >= nextStart - 12) {
+			const progress = interpolate(f, [nextStart - 12, nextStart], [0, 1], {
+				extrapolateLeft: 'clamp',
+				extrapolateRight: 'clamp',
+			});
+			smoothActiveIndex = activeIndex + progress;
+		}
+	}
 
 	// Gentle ambient float
 	const floatX = Math.sin(f / 35) * 8;
 	const floatY = Math.cos(f / 40) * 10;
-	const rotX = cardTiltX + Math.sin(f / 45) * 3;
-	const rotY = cardTiltY + Math.cos(f / 50) * 3;
+	const rotX = cardTiltX + Math.sin(f / 45) * 2.5;
+	const rotY = cardTiltY + Math.cos(f / 50) * 2.5;
+
+	const formatTime = (secs: number) => {
+		const m = Math.floor(secs / 60);
+		const s = Math.floor(secs % 60);
+		return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+	};
+
+	const currentSec = Math.floor(f / fps);
+	const totalSec = Math.floor(durationInFrames / fps);
+	const progressPercent = Math.min(100, Math.max(0, (f / durationInFrames) * 100));
 
 	return (
 		<div
@@ -67,172 +120,503 @@ export const SpotifyLyricCard: React.FC<{
 				style={{
 					width,
 					height,
-					borderRadius: 36,
-					background: 'linear-gradient(165deg, rgba(30,30,40,0.85) 0%, rgba(12,12,18,0.92) 100%)',
-					border: '1px solid rgba(255, 255, 255, 0.14)',
-					boxShadow: `0 35px 100px rgba(0,0,0,0.8), 0 0 60px ${accentColor}26`,
-					backdropFilter: 'blur(24px)',
+					borderRadius: 40,
+					background: 'linear-gradient(160deg, rgba(26, 28, 38, 0.88) 0%, rgba(12, 13, 20, 0.95) 100%)',
+					border: '1.5px solid rgba(255, 255, 255, 0.16)',
+					boxShadow: `0 45px 120px rgba(0,0,0,0.90), 0 0 70px ${accentColor}26, inset 0 1px 1px rgba(255,255,255,0.25)`,
+					backdropFilter: 'blur(36px) saturate(180%)',
+					WebkitBackdropFilter: 'blur(36px) saturate(180%)',
 					transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) translate3d(${floatX}px, ${floatY}px, 0px)`,
 					display: 'flex',
 					flexDirection: 'column',
-					padding: 48,
+					padding: '38px 46px',
 					position: 'relative',
 					overflow: 'hidden',
 				}}
 			>
 				{/* Top Track Header */}
-				<div style={{display: 'flex', alignItems: 'center', gap: 24, marginBottom: 36}}>
+				<div style={{display: 'flex', alignItems: 'center', gap: 22, marginBottom: 20}}>
 					{coverImage ? (
 						<div
 							style={{
-								width: 90,
-								height: 90,
-								borderRadius: 18,
+								width: 96,
+								height: 96,
+								borderRadius: 20,
 								overflow: 'hidden',
-								boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+								boxShadow: `0 12px 30px rgba(0,0,0,0.65), 0 0 25px ${accentColor}33`,
+								border: '1.5px solid rgba(255,255,255,0.22)',
 								flexShrink: 0,
+								position: 'relative',
 							}}
 						>
 							<Img
 								src={coverImage.startsWith('http') ? coverImage : staticFile(coverImage)}
 								style={{width: '100%', height: '100%', objectFit: 'cover'}}
 							/>
+							{/* Gloss sheen overlay */}
+							<div
+								style={{
+									position: 'absolute',
+									top: 0,
+									left: 0,
+									right: 0,
+									height: '45%',
+									background: 'linear-gradient(to bottom, rgba(255,255,255,0.22), transparent)',
+									pointerEvents: 'none',
+								}}
+							/>
 						</div>
 					) : (
 						<div
 							style={{
-								width: 90,
-								height: 90,
-								borderRadius: 18,
+								width: 96,
+								height: 96,
+								borderRadius: 20,
 								background: `linear-gradient(135deg, ${accentColor}, #7C3AED)`,
 								display: 'flex',
 								alignItems: 'center',
 								justifyContent: 'center',
-								fontSize: 36,
+								fontSize: 40,
 								fontWeight: 900,
 								color: '#000',
+								flexShrink: 0,
+								boxShadow: `0 12px 30px rgba(0,0,0,0.65), 0 0 25px ${accentColor}33`,
 							}}
 						>
 							♫
 						</div>
 					)}
-					<div style={{display: 'flex', flexDirection: 'column', gap: 4, flex: 1}}>
-						<div style={{fontSize: 32, fontWeight: 800, color: '#FFFFFF', letterSpacing: -0.5}}>
+					<div style={{display: 'flex', flexDirection: 'column', gap: 5, flex: 1}}>
+						{/* Channel Badge Pill */}
+						<div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+							<span
+								style={{
+									fontFamily: FONT_OUTFIT,
+									fontSize: 12,
+									fontWeight: 800,
+									letterSpacing: 1.5,
+									textTransform: 'uppercase',
+									color: '#EF4444',
+									background: 'rgba(239, 68, 68, 0.14)',
+									border: '1px solid rgba(239, 68, 68, 0.35)',
+									padding: '2px 10px',
+									borderRadius: 999,
+									display: 'inline-flex',
+									alignItems: 'center',
+									gap: 6,
+								}}
+							>
+								<span style={{fontSize: 9}}>▶</span>
+								{channelName}
+							</span>
+							{verified && (
+								<span
+									style={{
+										fontFamily: FONT_PLUS_JAKARTA,
+										fontSize: 11,
+										fontWeight: 700,
+										color: accentColor,
+										background: `${accentColor}18`,
+										border: `1px solid ${accentColor}40`,
+										padding: '2px 8px',
+										borderRadius: 999,
+										letterSpacing: 0.5,
+									}}
+								>
+									✓ VERIFIED
+								</span>
+							)}
+						</div>
+						<div
+							style={{
+								fontFamily: FONT_OUTFIT,
+								fontSize: 34,
+								fontWeight: 900,
+								color: '#FFFFFF',
+								letterSpacing: -0.5,
+								lineHeight: 1.15,
+							}}
+						>
 							{trackTitle}
 						</div>
-						<div style={{fontSize: 22, fontWeight: 500, color: C.dim}}>{artistName}</div>
+						<div
+							style={{
+								fontFamily: FONT_PLUS_JAKARTA,
+								fontSize: 18,
+								fontWeight: 600,
+								color: '#A1A1AA',
+								display: 'flex',
+								alignItems: 'center',
+								gap: 8,
+							}}
+						>
+							<span>{artistName}</span>
+							<span style={{fontSize: 14, opacity: 0.5}}>•</span>
+							<span style={{color: '#E4E4E7'}}>{channelName}</span>
+						</div>
 					</div>
-					{/* Spotify Logo Pill */}
-					<div
-						style={{
-							display: 'flex',
-							alignItems: 'center',
-							gap: 8,
-							padding: '8px 18px',
-							borderRadius: 999,
-							background: 'rgba(255,255,255,0.06)',
-							border: '1px solid rgba(255,255,255,0.1)',
-							fontSize: 16,
-							fontWeight: 700,
-							color: accentColor,
-						}}
-					>
-						<span style={{fontSize: 20}}>●</span> Lyrics
+					{/* Top Right Mini Equalizer Visualizer & Lyrics Pill */}
+					<div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8}}>
+						<div
+							style={{
+								display: 'flex',
+								alignItems: 'center',
+								gap: 8,
+								padding: '7px 16px',
+								borderRadius: 999,
+								background: 'rgba(255,255,255,0.07)',
+								border: '1px solid rgba(255,255,255,0.12)',
+								fontFamily: FONT_PLUS_JAKARTA,
+								fontSize: 14,
+								fontWeight: 700,
+								color: accentColor,
+								boxShadow: `0 0 20px ${accentColor}1a`,
+							}}
+						>
+							{/* Mini jumping equalizer bars */}
+							<div style={{display: 'flex', alignItems: 'flex-end', gap: 3, height: 14}}>
+								{[0.9, 1.5, 0.7, 1.2].map((speed, bIdx) => {
+									const barH = 4 + Math.abs(Math.sin((f * speed) / 4 + bIdx)) * 10;
+									return (
+										<div
+											key={bIdx}
+											style={{
+												width: 3,
+												height: barH,
+												borderRadius: 2,
+												backgroundColor: accentColor,
+											}}
+										/>
+									);
+								})}
+							</div>
+							<span>Lyrics</span>
+						</div>
 					</div>
 				</div>
 
-				{/* Scrolling Lyrics Stream */}
+				{/* Scrolling Lyrics Stream - Relative Centered Window (NEVER drifts or clips) */}
 				<div
 					style={{
 						flex: 1,
 						position: 'relative',
 						overflow: 'hidden',
-						maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-						WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+						maskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)',
+						WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)',
 					}}
 				>
-					<div
-						style={{
-							position: 'absolute',
-							top: '35%',
-							left: 0,
-							right: 0,
-							display: 'flex',
-							flexDirection: 'column',
-							gap: 32,
-							transform: `translateY(${activeIndex !== -1 ? -activeIndex * 84 : 0}px)`,
-							transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-						}}
-					>
-						{lines.map((line, idx) => {
-							const isCurrent = idx === activeIndex;
-							const isPast = activeIndex !== -1 && idx < activeIndex;
-							const isFuture = activeIndex !== -1 && idx > activeIndex;
+					{lines.map((line, idx) => {
+						const rel = idx - smoothActiveIndex;
+						// Only render lines in visible range (-3 to +4)
+						if (Math.abs(rel) > 4) return null;
 
-							// Dynamic spring transition on line change
-							const lineProgress = isCurrent ? spr(f, fps, line.startFrame, POP) : 1;
+						const isCurrent = idx === activeIndex;
+						const isPast = idx < activeIndex;
 
-							return (
+						// Dynamic spring scale for active line entrance
+						const lineProgress = isCurrent ? spr(f, fps, line.startFrame, POP) : 1;
+						// Centered around 210px inside the container
+						const topPos = 210 + rel * 105;
+
+						return (
+							<div
+								key={idx}
+								style={{
+									position: 'absolute',
+									top: topPos,
+									left: 0,
+									right: 0,
+									display: 'flex',
+									flexDirection: 'column',
+									gap: 6,
+									opacity: isCurrent ? 1 : isPast ? 0.38 : 0.18,
+									transform: isCurrent
+										? `scale(${0.96 + lineProgress * 0.08}) translateX(12px)`
+										: 'scale(1) translateX(0px)',
+									fontFamily: FONT_PLUS_JAKARTA,
+								}}
+							>
 								<div
-									key={idx}
 									style={{
+										fontSize: isCurrent ? 42 : 32,
+										fontWeight: isCurrent ? 800 : 700,
+										letterSpacing: -0.5,
 										display: 'flex',
-										flexDirection: 'column',
-										gap: 6,
-										opacity: isCurrent ? 1 : isPast ? 0.35 : 0.15,
-										transform: isCurrent
-											? `scale(${0.96 + lineProgress * 0.08}) translateX(12px)`
-											: 'scale(1) translateX(0px)',
-										transition: 'opacity 0.25s ease, transform 0.25s ease',
+										flexWrap: 'wrap',
+										gap: 12,
+										alignItems: 'baseline',
+										lineHeight: 1.25,
 									}}
 								>
+									{(() => {
+										// 1. If explicit frame-accurate words are provided:
+										if (line.words && line.words.length > 0) {
+											return line.words.map((w, wIdx) => {
+												const isVocalized = f >= w.startFrame;
+												const isCurrentWord = isCurrent && f >= w.startFrame && f < w.endFrame;
+
+												return (
+													<span
+														key={wIdx}
+														style={{
+															color: isCurrentWord
+																? accentColor
+																: isVocalized
+																? '#FFFFFF'
+																: isCurrent
+																? 'rgba(255, 255, 255, 0.38)'
+																: isPast
+																? '#E4E4E7'
+																: '#71717A',
+															textShadow: isCurrentWord
+																? `0 0 25px ${accentColor}, 0 0 50px ${accentColor}cc`
+																: isVocalized && isCurrent
+																? '0 0 15px rgba(255, 255, 255, 0.35)'
+																: undefined,
+															transform: isCurrentWord ? 'scale(1.10)' : 'scale(1)',
+															display: 'inline-block',
+															transition: 'transform 0.1s ease, color 0.1s ease',
+														}}
+													>
+														{w.text}
+													</span>
+												);
+											});
+										}
+
+										// 2. Fallback to natural ratio division
+										const words = line.text.split(' ');
+										if (!isCurrent) {
+											return (
+												<span style={{color: isPast ? '#E4E4E7' : '#71717A'}}>
+													{line.text}
+												</span>
+											);
+										}
+										const duration = Math.max(1, line.endFrame - line.startFrame);
+										const progress = Math.min(1, Math.max(0, (f - line.startFrame) / duration));
+										const activeWordIdx = Math.min(
+											words.length - 1,
+											Math.floor(progress * words.length)
+										);
+
+										return words.map((w, wIdx) => {
+											const isVocalized = wIdx <= activeWordIdx;
+											const isCurrentWord = wIdx === activeWordIdx;
+
+											return (
+												<span
+													key={wIdx}
+													style={{
+														color: isCurrentWord
+															? accentColor
+															: isVocalized
+															? '#FFFFFF'
+															: 'rgba(255, 255, 255, 0.4)',
+														textShadow: isCurrentWord
+															? `0 0 25px ${accentColor}, 0 0 50px ${accentColor}cc`
+															: isVocalized
+															? '0 0 15px rgba(255, 255, 255, 0.35)'
+															: undefined,
+														transform: isCurrentWord ? 'scale(1.08)' : 'scale(1)',
+														display: 'inline-block',
+														transition: 'transform 0.12s ease, color 0.12s ease',
+													}}
+												>
+													{w}
+												</span>
+											);
+										});
+									})()}
+								</div>
+								{line.translation && isCurrent && (
 									<div
 										style={{
-											fontSize: isCurrent ? 42 : 32,
-											fontWeight: isCurrent ? 900 : 700,
-											letterSpacing: -0.5,
-											color: isCurrent ? '#FFFFFF' : '#A1A1AA',
-											textShadow: isCurrent ? `0 0 25px ${accentColor}99` : undefined,
+											fontSize: 21,
+											fontWeight: 500,
+											color: '#A3E635',
+											fontStyle: 'italic',
+											letterSpacing: 0.2,
+											opacity: 0.95,
 										}}
 									>
-										{line.text}
+										{line.translation}
 									</div>
-									{line.translation && isCurrent && (
-										<div style={{fontSize: 22, fontWeight: 500, color: accentColor}}>
-											{line.translation}
-										</div>
-									)}
-								</div>
-							);
-						})}
-					</div>
+								)}
+							</div>
+						);
+					})}
 				</div>
 
-				{/* Animated Glowing Sparks on Active Line */}
-				{activeLine && (
-					<div
-						style={{
-							position: 'absolute',
-							right: 36,
-							bottom: 36,
-							display: 'flex',
-							alignItems: 'center',
-							gap: 12,
-						}}
-					>
+				{/* Bottom Media Player Scrubber & Controls HUD */}
+				<div style={{display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12}}>
+					{/* Progress Scrubber */}
+					<div style={{display: 'flex', alignItems: 'center', gap: 14}}>
+						<span
+							style={{
+								fontFamily: FONT_PLUS_JAKARTA,
+								fontSize: 13,
+								fontWeight: 600,
+								color: '#A1A1AA',
+								minWidth: 42,
+							}}
+						>
+							{formatTime(currentSec)}
+						</span>
 						<div
 							style={{
-								width: 14,
-								height: 14,
-								borderRadius: '50%',
-								backgroundColor: accentColor,
-								boxShadow: `0 0 20px ${accentColor}`,
-								opacity: 0.5 + 0.5 * Math.sin(f / 6),
+								flex: 1,
+								height: 5,
+								borderRadius: 3,
+								backgroundColor: 'rgba(255, 255, 255, 0.12)',
+								position: 'relative',
 							}}
-						/>
-						<span style={{fontSize: 16, fontWeight: 600, color: C.dim}}>Live Sync</span>
+						>
+							<div
+								style={{
+									width: `${progressPercent}%`,
+									height: '100%',
+									borderRadius: 3,
+									background: `linear-gradient(90deg, #10B981, ${accentColor})`,
+									boxShadow: `0 0 12px ${accentColor}`,
+									position: 'relative',
+								}}
+							>
+								{/* Scrubber Knob */}
+								<div
+									style={{
+										position: 'absolute',
+										right: -5,
+										top: -4.5,
+										width: 14,
+										height: 14,
+										borderRadius: '50%',
+										backgroundColor: '#FFFFFF',
+										boxShadow: `0 0 12px ${accentColor}, 0 2px 4px rgba(0,0,0,0.5)`,
+									}}
+								/>
+							</div>
+						</div>
+						<span
+							style={{
+								fontFamily: FONT_PLUS_JAKARTA,
+								fontSize: 13,
+								fontWeight: 600,
+								color: '#A1A1AA',
+								minWidth: 42,
+								textAlign: 'right',
+							}}
+						>
+							{formatTime(totalSec)}
+						</span>
 					</div>
-				)}
+
+					{/* Media Buttons Row */}
+					<div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px'}}>
+						{/* Like & Shuffle */}
+						<div style={{display: 'flex', alignItems: 'center', gap: 18}}>
+							<span
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									filter: `drop-shadow(0 0 8px ${accentColor}88)`,
+									cursor: 'default',
+								}}
+							>
+								<svg width="22" height="22" viewBox="0 0 24 24" fill={accentColor}>
+									<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+								</svg>
+							</span>
+							<span style={{display: 'flex', alignItems: 'center'}}>
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+									<polyline points="16 3 21 3 21 8"/>
+									<line x1="4" y1="20" x2="21" y2="3"/>
+									<polyline points="21 16 21 21 16 21"/>
+									<line x1="15" y1="15" x2="21" y2="21"/>
+									<line x1="4" y1="4" x2="9" y2="9"/>
+								</svg>
+							</span>
+						</div>
+
+						{/* Center Controls: Prev, Play/Pause, Next */}
+						<div style={{display: 'flex', alignItems: 'center', gap: 22}}>
+							<span style={{display: 'flex', alignItems: 'center'}}>
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(255,255,255,0.88)">
+									<polygon points="19 20 9 12 19 4 19 20"/>
+									<line x1="5" y1="19" x2="5" y2="5" stroke="rgba(255,255,255,0.88)" strokeWidth="2.5" strokeLinecap="round"/>
+								</svg>
+							</span>
+							<div
+								style={{
+									width: 48,
+									height: 48,
+									borderRadius: '50%',
+									backgroundColor: accentColor,
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									boxShadow: `0 0 24px ${accentColor}88`,
+									transform: `scale(${1 + Math.sin(f / 12) * 0.04})`,
+								}}
+							>
+								<svg width="18" height="18" viewBox="0 0 24 24" fill="#000000">
+									<rect x="6" y="4" width="4" height="16" rx="1.5"/>
+									<rect x="14" y="4" width="4" height="16" rx="1.5"/>
+								</svg>
+							</div>
+							<span style={{display: 'flex', alignItems: 'center'}}>
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="rgba(255,255,255,0.88)">
+									<polygon points="5 4 15 12 5 20 5 4"/>
+									<line x1="19" y1="5" x2="19" y2="19" stroke="rgba(255,255,255,0.88)" strokeWidth="2.5" strokeLinecap="round"/>
+								</svg>
+							</span>
+						</div>
+
+						{/* Repeat & Live Sync */}
+						<div style={{display: 'flex', alignItems: 'center', gap: 14}}>
+							<span style={{display: 'flex', alignItems: 'center'}}>
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+									<polyline points="17 1 21 5 17 9"/>
+									<path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+									<polyline points="7 23 3 19 7 15"/>
+									<path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+								</svg>
+							</span>
+							<div
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: 7,
+									padding: '5px 12px',
+									borderRadius: 999,
+									background: 'rgba(30, 215, 96, 0.1)',
+									border: '1px solid rgba(30, 215, 96, 0.25)',
+								}}
+							>
+								<div
+									style={{
+										width: 8,
+										height: 8,
+										borderRadius: '50%',
+										backgroundColor: accentColor,
+										boxShadow: `0 0 10px ${accentColor}`,
+										opacity: 0.6 + 0.4 * Math.sin(f / 6),
+									}}
+								/>
+								<span
+									style={{
+										fontFamily: FONT_PLUS_JAKARTA,
+										fontSize: 13,
+										fontWeight: 700,
+										color: accentColor,
+									}}
+								>
+									Live Sync
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
@@ -243,12 +627,26 @@ export const SpotifyLyricCard: React.FC<{
 // =========================================================================
 export const WordWall3D: React.FC<{
 	words: string[];
+	activeWords?: string[];
 	color?: string;
+	accentColor?: string;
 	tiltAngle?: number;
 	fontSize?: number;
-}> = ({words, color = 'rgba(255, 255, 255, 0.06)', tiltAngle = -22, fontSize = 68}) => {
+}> = ({
+	words,
+	activeWords = [],
+	color = 'rgba(255, 255, 255, 0.12)',
+	accentColor = '#1ED760',
+	tiltAngle = -22,
+	fontSize = 68,
+}) => {
 	const f = useCurrentFrame();
-	const driftY = (f * 0.8) % 300;
+	const driftY = (f * 0.7) % 360;
+	const repeatedWords = React.useMemo(() => [...words, ...words, ...words, ...words], [words]);
+	const cleanActive = React.useMemo(
+		() => activeWords.map((w) => w.toUpperCase().replace(/[^A-Z0-9]/g, '')).filter((w) => w.length > 1),
+		[activeWords]
+	);
 
 	return (
 		<AbsoluteFill
@@ -269,23 +667,36 @@ export const WordWall3D: React.FC<{
 					flexWrap: 'wrap',
 					gap: 36,
 					alignContent: 'flex-start',
-					opacity: 0.8,
+					opacity: 0.9,
 				}}
 			>
-				{words.map((w, i) => (
-					<span
-						key={i}
-						style={{
-							fontSize,
-							fontWeight: 900,
-							letterSpacing: -1,
-							color,
-							textTransform: 'uppercase',
-						}}
-					>
-						{w}
-					</span>
-				))}
+				{repeatedWords.map((w, i) => {
+					const clean = w.toUpperCase().replace(/[^A-Z0-9]/g, '');
+					const isHighlighted = cleanActive.some(
+						(act) => (act.length > 2 && clean.includes(act)) || clean === act
+					);
+					return (
+						<span
+							key={i}
+							style={{
+								fontFamily: FONT_OUTFIT,
+								fontSize,
+								fontWeight: 900,
+								letterSpacing: -1,
+								color: isHighlighted ? accentColor : color,
+								textShadow: isHighlighted
+									? `0 0 25px ${accentColor}, 0 0 50px ${accentColor}88`
+									: undefined,
+								transform: isHighlighted ? 'scale(1.12)' : 'scale(1)',
+								textTransform: 'uppercase',
+								transition: 'color 0.2s ease, transform 0.2s ease',
+								display: 'inline-block',
+							}}
+						>
+							{w}
+						</span>
+					);
+				})}
 			</div>
 		</AbsoluteFill>
 	);
